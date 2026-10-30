@@ -29,3 +29,5 @@ dist-ssr
 tools
 test-results
 __pycache__
+
+.superpowers/
