@@ -1,4 +1,4 @@
-import { ContactShadows, Environment, Lightformer, OrbitControls } from '@react-three/drei'
+import { ContactShadows, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { StrictMode, useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -9,6 +9,7 @@ import '@fontsource-variable/instrument-sans/wght'
 import '../index.css'
 import type { KitId } from '../data/kits'
 import { KitModel, type KitView } from '../three/KitModel'
+import { StudioLights } from '../three/StudioLights'
 import { viewBounds, type KitSceneData } from '../three/kitScene'
 import { useKitAssets, type KitTextures } from '../three/useKitScene'
 
@@ -73,26 +74,7 @@ function Scene({ kit, view, angle, scene, textures }: { kit: KitId; view: KitVie
       <ReadySignal />
       <OrbitControls ref={controls} enablePan={false} enableDamping minPolarAngle={Math.PI * 0.32} maxPolarAngle={Math.PI * 0.62} />
 
-      <ambientLight intensity={0.2} />
-      <directionalLight
-        position={[1.6, 3.2, 2.4]}
-        intensity={2.4}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0004}
-        shadow-normalBias={0.02}
-        shadow-camera-left={-1}
-        shadow-camera-right={1}
-        shadow-camera-top={2}
-        shadow-camera-bottom={-0.2}
-      />
-      <Environment resolution={256}>
-        {/* Estudio: caja de luz grande arriba, dos rebotes laterales y un contraluz */}
-        <Lightformer form="rect" intensity={2.2} position={[0, 4, 1]} rotation-x={Math.PI / 2} scale={[4, 2, 1]} />
-        <Lightformer form="rect" intensity={1.2} position={[-3, 1.2, 1.5]} rotation-y={Math.PI / 2.6} scale={[2, 3, 1]} />
-        <Lightformer form="rect" intensity={0.8} position={[3, 1, 1]} rotation-y={-Math.PI / 2.4} scale={[2, 3, 1]} />
-        <Lightformer form="ring" intensity={1.5} position={[0, 1.4, -3]} scale={1.5} />
-      </Environment>
+      <StudioLights />
 
       <group rotation-y={THREE.MathUtils.degToRad(angle)}>
         <KitModel kit={kit} view={view} scene={scene} textures={textures} instant />
