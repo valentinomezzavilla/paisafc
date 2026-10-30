@@ -3,6 +3,7 @@ import { Hero } from './components/hero/Hero'
 import { KitSection } from './components/kits/KitSection'
 import { KitsTogether } from './components/kits/KitsTogether'
 import { Nav } from './components/layout/Nav'
+import { Sponsors } from './components/sponsors/Sponsors'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
 
 export default function App() {
@@ -22,7 +23,7 @@ export default function App() {
         <KitSection />
         <KitsTogether />
         <CrestSection />
-        <section id="contacto" className="min-h-[50svh] bg-night" />
+        <Sponsors />
       </main>
     </div>
   )

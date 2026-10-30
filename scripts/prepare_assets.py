@@ -220,6 +220,23 @@ def build_og(crest: Image.Image, forest: tuple[int, int, int]) -> None:
     print("  og-image: 1200x630")
 
 
+def build_sponsor_marks() -> None:
+    """Letra de Tom's Burger tomada de la espalda crema, como máscara (blanco + alfa)
+    para poder pintarla de cualquier color con CSS. TODO: reemplazar por el logo oficial."""
+    mockup = Image.open(SRC / "camiseta-mockup.jpg").convert("RGB")
+    crop = mockup.crop((385, 300, 525, 380))
+    big = crop.resize((crop.width * SCALE, crop.height * SCALE), Image.LANCZOS)
+    lum = np.asarray(big.convert("L"), dtype=np.float32)
+    alpha = np.clip((150 - lum) / (150 - 80), 0, 1)  # los pliegues de la tela quedan afuera
+    a_img = Image.fromarray(np.uint8(alpha * 255)).filter(ImageFilter.GaussianBlur(0.6))
+    mark = Image.new("RGBA", big.size, (255, 255, 255, 255))
+    mark.putalpha(a_img)
+    folder = OUT / "sponsors"
+    folder.mkdir(parents=True, exist_ok=True)
+    trim(mark, pad=6).save(folder / "toms-burger.png", optimize=True)
+    print("  toms-burger.png")
+
+
 def build_palette() -> dict[str, str]:
     hexa = lambda c: "#{:02x}{:02x}{:02x}".format(*np.round(c).astype(int))
     palette = {}
@@ -270,6 +287,8 @@ def main() -> None:
     build_icons(crest)
     forest = tuple(int(palette["forest"][i : i + 2], 16) for i in (1, 3, 5))
     build_og(crest, forest)
+    print("Sponsors")
+    build_sponsor_marks()
 
 
 if __name__ == "__main__":
