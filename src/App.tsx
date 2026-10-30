@@ -1,3 +1,4 @@
+import { CrestSection } from './components/crest/CrestSection'
 import { Hero } from './components/hero/Hero'
 import { KitSection } from './components/kits/KitSection'
 import { KitsTogether } from './components/kits/KitsTogether'
@@ -20,7 +21,8 @@ export default function App() {
         <Hero />
         <KitSection />
         <KitsTogether />
-        <section id="escudo" className="min-h-svh bg-night" />
+        <CrestSection />
+        <section id="contacto" className="min-h-[50svh] bg-night" />
       </main>
     </div>
   )

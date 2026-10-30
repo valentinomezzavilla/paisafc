@@ -47,14 +47,15 @@ export const crestSection = {
   eyebrow: 'El escudo',
   title: 'Lo que llevamos en el pecho',
   intro: 'Cada parte del escudo, de cerca.',
+  // x/y (en % del escudo): dónde va el pin y el centro del foco.
   // TODO: reemplazar cada texto por el significado real que le dé el club.
   parts: [
-    { id: 'paisano', x: 50, y: 34, title: 'El paisano', text: 'Sombrero de ala ancha, poncho y pañuelo al cuello.' },
-    { id: 'vaso', x: 20, y: 18, title: 'El vaso en alto', text: 'Levantado con una mano, como en un brindis.' },
-    { id: 'mate', x: 22, y: 64, title: 'El mate', text: 'Con su bombilla, a los pies del paisano.' },
-    { id: 'cinta', x: 50, y: 78, title: 'La cinta', text: 'Verde con borde dorado y el nombre del club en serif crema.' },
-    { id: 'estrellas', x: 7, y: 84, title: 'Las estrellas', text: 'Una en cada punta de la cinta.' },
-    { id: 'borde', x: 91, y: 40, title: 'El borde dorado', text: 'Enmarca el campo verde con textura de grano.' },
+    { id: 'paisano', x: 62, y: 27, title: 'El paisano', text: 'Sombrero de ala ancha, poncho y pañuelo al cuello.' },
+    { id: 'vaso', x: 20, y: 11, title: 'El vaso en alto', text: 'Levantado en una mano, bien en alto.' },
+    { id: 'mate', x: 21, y: 55, title: 'El mate', text: 'Con su bombilla, a los pies del paisano.' },
+    { id: 'cinta', x: 50, y: 80, title: 'La cinta', text: 'Verde con borde dorado y el nombre del club en serif crema.' },
+    { id: 'estrellas', x: 10, y: 88, title: 'Las estrellas', text: 'Una en cada punta de la cinta.' },
+    { id: 'borde', x: 89, y: 42, title: 'El borde dorado', text: 'Enmarca el campo verde con textura de grano.' },
   ],
 }
 

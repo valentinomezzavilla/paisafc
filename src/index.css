@@ -75,3 +75,20 @@
     transform: translateY(8px) scale(0.97);
   }
 }
+
+/* Posición del foco del desglose del escudo: registradas para poder animarlas con transition. */
+@property --spot-x {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 50%;
+}
+@property --spot-y {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 40%;
+}
+@property --spot-r {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 100%;
+}
