@@ -26,9 +26,9 @@ const smooth = THREE.MathUtils.smoothstep
 
 // Cadera: [altura, medio ancho, media profundidad] del contorno completo, centrado en x = 0.
 const HIP_PROFILE: [number, number, number][] = [
-  [TOP_Y, 0.188, 0.126],
-  [BODY.hip, 0.197, 0.136],
-  [BODY.crotch, 0.205, 0.142],
+  [TOP_Y, 0.174, 0.118],
+  [BODY.hip, 0.181, 0.124],
+  [BODY.crotch, 0.19, 0.13],
 ]
 // Pierna: [altura, centro x, medio ancho, media profundidad]
 const LEG_PROFILE: [number, number, number, number][] = [
@@ -107,7 +107,7 @@ export function buildShorts(): ShortsParts {
   const left = right.map(mirrorX)
 
   // Cintura elástica: una banda completa, apenas más ancha que la cadera
-  const band = [TOP_Y - 0.035, TOP_Y - 0.001].map((y) => superellipse(0, y, 0, 0.19, 0.128, 2.3, 96))
+  const band = [TOP_Y - 0.035, TOP_Y - 0.001].map((y) => superellipse(0, y, 0, 0.176, 0.12, 2.3, 96))
 
   return {
     legL: loft(left),

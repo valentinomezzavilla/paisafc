@@ -5,7 +5,7 @@ import { NECK, neckPoint } from './neck'
 const PATH_SEGMENTS = 96
 /** Hueco adelante entre las dos puntas del cuello (radianes a cada lado del frente). */
 const FRONT_GAP = 0.2
-const STAND_H = 0.024
+const STAND_H = 0.022
 /** Separación entre la caída del cuello y la tela de abajo. */
 const CLEARANCE = 0.0028
 const TRIM_W = 0.006
@@ -61,8 +61,8 @@ export function buildCollar(body: THREE.BufferGeometry): { collar: THREE.BufferG
     const p1 = p0.clone().addScaledVector(up, stand).addScaledVector(out, 0.002)
     const p2 = p1.clone().addScaledVector(up, 0.003).addScaledVector(out, 0.005)
     // Borde de la caída: a los costados se apoya en el hombro; en las puntas baja por el pecho.
-    const reach = THREE.MathUtils.lerp(0.045, 0.03, tip)
-    const drop = THREE.MathUtils.lerp(0.016, 0.075, tip)
+    const reach = 0.03
+    const drop = THREE.MathUtils.lerp(0.014, 0.072, tip)
     const edge = keepOutside(base.clone().addScaledVector(out, reach).addScaledVector(up, -drop), probe, CLEARANCE)
 
     const fall = [0.3, 0.6, 0.85, 1].map((f) =>

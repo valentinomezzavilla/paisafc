@@ -31,3 +31,4 @@ test-results
 __pycache__
 
 .superpowers/
+docs/superpowers/checkpoints/

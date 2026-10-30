@@ -22,7 +22,7 @@ export const SLEEVE_SEGMENTS = 48
 // Como en el mockup: la camiseta termina sobre la cadera y deja ver bien el short.
 const HEM_Y = BODY.crotch + 0.07
 /** Altura del hombro donde termina el torso y empieza el canesú (a los costados). */
-const SHOULDER_Y = BODY.shoulder - 0.005
+const SHOULDER_Y = BODY.shoulder - 0.015
 /** Adelante el canesú arranca más abajo, para que el pecho suba derecho hasta la V. */
 const FRONT_DROP = 0.085
 /** Espesor de la tela en los dobladillos. */
@@ -30,20 +30,20 @@ const HEM_THICKNESS = 0.0035
 
 // Contorno del torso: [altura, medio ancho, media profundidad]. Corte recto, apenas suelto.
 const TORSO_PROFILE: [number, number, number][] = [
-  [HEM_Y, 0.214, 0.143],
-  [0.93, 0.211, 0.14],
-  [0.985, 0.206, 0.137],
-  [BODY.waist, 0.201, 0.134],
-  [1.15, 0.205, 0.138],
-  [1.25, 0.211, 0.143],
-  [1.33, 0.215, 0.141],
-  [1.41, 0.218, 0.132],
-  [SHOULDER_Y, 0.219, 0.12],
+  [HEM_Y, 0.199, 0.136],
+  [0.93, 0.196, 0.134],
+  [0.985, 0.192, 0.131],
+  [BODY.waist, 0.189, 0.129],
+  [1.15, 0.192, 0.132],
+  [1.25, 0.197, 0.136],
+  [1.33, 0.2, 0.134],
+  [1.41, 0.199, 0.126],
+  [SHOULDER_Y, 0.196, 0.114],
 ]
 const TORSO_N = 2.5
 
-// Manga: sale del hombro a 28° de la vertical.
-const SLEEVE_ANGLE = THREE.MathUtils.degToRad(28)
+// Manga: sale del hombro a 32° de la vertical.
+const SLEEVE_ANGLE = THREE.MathUtils.degToRad(32)
 const SLEEVE_LENGTH = 0.235
 const SLEEVE_ROOT_R = 0.08
 const SLEEVE_CUFF_R = 0.064
@@ -108,11 +108,10 @@ function torsoRings(): Ring[] {
     rings.push(
       shoulder.map((p, j) => {
         const n = neck[j]
-        const h = 1 - (1 - s) ** 1.35
         return new THREE.Vector3(
-          THREE.MathUtils.lerp(p.x, n.x, h),
-          THREE.MathUtils.lerp(p.y, n.y, s),
-          THREE.MathUtils.lerp(p.z, n.z, h),
+          THREE.MathUtils.lerp(p.x, n.x, s),
+          THREE.MathUtils.lerp(p.y, n.y, s ** 0.9),
+          THREE.MathUtils.lerp(p.z, n.z, s),
         )
       }),
     )
@@ -147,7 +146,10 @@ function sleeveFrame(sign: 1 | -1): SleeveFrame {
     const fade = smooth(s, 0, 0.03) * (1 - smooth(u, 0.85, 1))
     return fade * (0.004 * under * Math.sin(38 * s + 3 * Math.cos(tt)) + 0.0014 * Math.sin(4 * tt + 20 * s))
   }
-  return { axis, center: (s) => origin.clone().addScaledVector(axis, s), radius, offset }
+  // La parte metida en el torso entra hacia el cuerpo (no sube por el eje), así no asoma sobre el hombro.
+  const inward = new THREE.Vector3(-sign, -0.2, 0).normalize()
+  const center = (s: number) => (s >= 0 ? origin.clone().addScaledVector(axis, s) : origin.clone().addScaledVector(inward, -s))
+  return { axis, center, radius, offset }
 }
 
 function buildSleeve(sign: 1 | -1): { sleeve: THREE.BufferGeometry; trim: THREE.BufferGeometry } {

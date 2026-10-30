@@ -14,7 +14,7 @@ const LENGTH = 0.27
 const HEEL_Z = -0.085
 /** La punta abre un poco hacia afuera, como en el mockup. */
 const TOE_OUT = THREE.MathUtils.degToRad(7)
-const COLLAR_Y = BODY.ankle + 0.035
+const COLLAR_Y = BODY.ankle + 0.03
 
 const smooth = THREE.MathUtils.smoothstep
 
@@ -22,26 +22,27 @@ const smooth = THREE.MathUtils.smoothstep
 function footprint(t: number, grow = 0): THREE.Vector3 {
   const u = Math.cos(t) // 1 en la punta, -1 en el talón
   const z = HEEL_Z + (LENGTH / 2) * (1 + u) + grow * u
-  // Más ancho en el metatarso, angosto en el talón; el lado interno es más recto
-  const outerSide = Math.sin(t) > 0 ? 1 : 0.9
-  const half = (0.036 + 0.017 * smooth(u, -0.9, 0.15) - 0.012 * smooth(u, 0.7, 1)) * outerSide + grow
-  return new THREE.Vector3(Math.sign(Math.sin(t)) * Math.abs(Math.sin(t)) ** 0.85 * half, 0, z)
+  // Angosto en el talón, ancho en el metatarso y la punta afinada; el lado interno es más recto
+  const outerSide = Math.sin(t) > 0 ? 1 : 0.88
+  const half = (0.03 + 0.014 * smooth(u, -0.85, 0.25) - 0.01 * smooth(u, 0.65, 1)) * outerSide + grow
+  return new THREE.Vector3(Math.sign(Math.sin(t)) * Math.abs(Math.sin(t)) ** 0.7 * half, 0, z)
 }
 
-/** Boca del botín: un óvalo alrededor de la media. */
+/** Boca del botín: un óvalo justo alrededor de la media, más bajo adelante que en el talón. */
 function collar(t: number): THREE.Vector3 {
-  return new THREE.Vector3(0.045 * Math.sin(t), COLLAR_Y + 0.012 * (1 - Math.cos(t)) * 0.5, 0.012 + 0.05 * Math.cos(t))
+  const u = Math.cos(t)
+  return new THREE.Vector3(0.045 * Math.sin(t), COLLAR_Y - 0.02 * Math.max(0, u), -0.033 + 0.052 * u)
 }
 
 const place = (p: THREE.Vector3) =>
   p.applyAxisAngle(new THREE.Vector3(0, 1, 0), TOE_OUT).add(new THREE.Vector3(BODY.legSpacing, 0, 0))
 
 /**
- * Botín de fútbol bajo. Cada punto de la huella sube por una curva hasta la boca: adelante pasa por
- * la puntera baja, atrás sube derecho por el talón.
+ * Botín de fútbol bajo. Cada punto de la huella sube por el lateral y cruza por arriba hasta la boca:
+ * adelante la puntera es baja y la capellada larga; atrás el talón sube derecho.
  */
 export function buildBoot(side: 'L' | 'R'): BootParts {
-  const steps = 18
+  const steps = 22
   const rings: Ring[] = []
   for (let i = 0; i <= steps; i++) {
     const s = i / steps
@@ -51,11 +52,16 @@ export function buildBoot(side: 'L' | 'R'): BootParts {
         const u = Math.cos(t)
         const start = footprint(t).setY(SOLE_H)
         const end = collar(t)
-        // Altura de la capellada en ese punto: puntera baja, talón alto
-        const h = THREE.MathUtils.lerp(0.075, 0.042, smooth(u, -0.2, 0.95))
-        const ctrl = start.clone().lerp(end, 0.15).setY(SOLE_H + h)
+        // Lateral: sube casi derecho (bajo en la puntera, alto en el talón); después cruza por arriba
+        // hasta la boca, con la capellada apenas abombada.
+        const wall = THREE.MathUtils.lerp(0.07, 0.024, smooth(u, -0.7, 0.85))
+        const top = start.clone().lerpVectors(start, end, 0.06).setY(Math.min(SOLE_H + wall, end.y))
         const p = new THREE.Vector3()
-        new THREE.QuadraticBezierCurve3(start, ctrl, end).getPoint(s, p)
+        if (s < 0.35) p.lerpVectors(start, top, smooth(s / 0.35, 0, 1) * 0.5 + (s / 0.35) * 0.5)
+        else {
+          const ctrl = top.clone().lerp(end, 0.4).setY(Math.max(top.y, end.y - 0.02) + 0.008)
+          new THREE.QuadraticBezierCurve3(top, ctrl, end).getPoint((s - 0.35) / 0.65, p)
+        }
         return place(p)
       }),
     )
