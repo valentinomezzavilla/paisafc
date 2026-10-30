@@ -24,13 +24,16 @@ const initial = {
   view: (params.get('view') === 'full' ? 'full' : 'shirt') as KitView,
   angle: Number(params.get('angle') ?? 0),
   ui: params.get('ui') !== '0',
+  /** bg=0: fondo transparente, para los pósters del sitio. */
+  bg: params.get('bg') !== '0',
 }
 
 const BG: Record<KitId, [string, string]> = {
   verde: ['#1a3d24', '#0a2111'],
   crema: ['#ece6d8', '#d6cfbd'],
 }
-const FOV = 28
+// Igual que el visor del sitio, así los pósters calzan con el 3D
+const FOV = 26
 
 /** Encuadra la cámara a la caja de la vista. */
 function Framing({ view, scene, controls }: { view: KitView; scene: KitSceneData; controls: React.RefObject<OrbitControlsImpl | null> }) {
@@ -42,7 +45,7 @@ function Framing({ view, scene, controls }: { view: KitView; scene: KitSceneData
     const dims = box.getSize(new THREE.Vector3())
     const fitH = dims.y / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2))
     const fitW = dims.x / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2)) / (size.width / size.height)
-    const dist = Math.max(fitH, fitW) * 1.18
+    const dist = Math.max(fitH, fitW) * (view === 'full' ? 1.18 : 1.32)
     camera.position.set(center.x, center.y + dims.y * 0.04, center.z + dist)
     camera.lookAt(center)
     controls.current?.target.copy(center)
@@ -101,16 +104,17 @@ function Preview() {
   const [view, setView] = useState<KitView>(initial.view)
   const [angle, setAngle] = useState(initial.angle)
   const [a, b] = BG[kit]
-  const assets = useKitAssets(['verde', 'crema'])
+  const loaded = useKitAssets(['verde', 'crema'])
+  const assets = loaded === 'error' ? null : loaded
 
   return (
-    <div className="flex h-svh flex-col bg-neutral-900 text-cream lg:flex-row">
-      <div className="relative min-h-0 flex-1" style={{ background: `radial-gradient(110% 80% at 50% 40%, ${a} 30%, ${b})` }}>
+    <div className={`flex h-svh flex-col text-cream lg:flex-row ${initial.bg ? 'bg-neutral-900' : ''}`}>
+      <div className="relative min-h-0 flex-1" style={initial.bg ? { background: `radial-gradient(110% 80% at 50% 40%, ${a} 30%, ${b})` } : undefined}>
         <Canvas
           shadows="soft"
           dpr={[1, 2]}
           camera={{ fov: FOV, near: 0.05, far: 20 }}
-          gl={{ antialias: true, toneMapping: THREE.AgXToneMapping, toneMappingExposure: 1.35, preserveDrawingBuffer: true }}
+          gl={{ antialias: true, alpha: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: 1.05, preserveDrawingBuffer: true }}
         >
           {assets && <Scene kit={kit} view={view} angle={angle} scene={assets.scene} textures={assets.textures[kit]} />}
         </Canvas>

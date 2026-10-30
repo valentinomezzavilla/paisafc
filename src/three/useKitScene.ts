@@ -29,16 +29,26 @@ export function loadKitTextures(kit: KitId): Promise<KitTextures> {
   return Promise.all([topoTexture(kit), decalTextures(kit)]).then(([topo, decals]) => ({ topo, decals }))
 }
 
-/** Geometría y texturas de los kits pedidos; null hasta que está todo. */
-export function useKitAssets(kits: KitId[]): { scene: KitSceneData; textures: Record<KitId, KitTextures> } | null {
-  const [state, setState] = useState<{ scene: KitSceneData; textures: Record<KitId, KitTextures> } | null>(null)
+export interface KitAssets {
+  scene: KitSceneData
+  textures: Record<KitId, KitTextures>
+}
+
+/** Geometría y texturas de los kits pedidos: null mientras cargan, 'error' si algo falló. */
+export function useKitAssets(kits: KitId[]): KitAssets | null | 'error' {
+  const [state, setState] = useState<KitAssets | null | 'error'>(null)
   const key = kits.join(',')
   useEffect(() => {
     let alive = true
     const ids = key.split(',') as KitId[]
-    Promise.all([loadKitScene(), ...ids.map(loadKitTextures)]).then(([scene, ...tex]) => {
-      if (alive) setState({ scene, textures: Object.fromEntries(ids.map((id, i) => [id, tex[i]])) as Record<KitId, KitTextures> })
-    })
+    Promise.all([loadKitScene(), ...ids.map(loadKitTextures)]).then(
+      ([scene, ...tex]) => {
+        if (alive) setState({ scene, textures: Object.fromEntries(ids.map((id, i) => [id, tex[i]])) as Record<KitId, KitTextures> })
+      },
+      () => {
+        if (alive) setState('error')
+      },
+    )
     return () => {
       alive = false
     }

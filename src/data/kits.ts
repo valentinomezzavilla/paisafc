@@ -22,14 +22,9 @@ export const ROLE_LABEL: Record<KitRole, string> = {
 }
 const ROLE_ORDER: KitRole[] = ['titular', 'suplente', 'alternativa']
 
-/**
- * Un detalle tocable. `id` es también su ancla sobre la prenda 3D (ver `src/three/anchors.ts`).
- * x/y: coordenadas en % sobre la foto (vista plana actual).
- */
+/** Un detalle tocable. `id` es también su ancla sobre la prenda 3D: dónde va, en `src/three/anchors.ts`. */
 export interface Hotspot {
   id: AnchorId
-  x: number
-  y: number
   title: string
   text: string
 }
@@ -58,8 +53,8 @@ export interface KitData {
   colorName: string
   theme: KitTheme
   pieces: { front: KitPiece; back: KitPiece; shorts: KitPiece; socks: KitPiece }
-  frontHotspots: Hotspot[]
-  backHotspots: Hotspot[]
+  /** En el orden en que se numeran: frente, espalda y short. */
+  hotspots: Hotspot[]
 }
 
 export interface Kit extends KitData {
@@ -97,24 +92,21 @@ const KIT_LIST: KitData[] = [
       shorts: piece('titular-short', 858, 718, 'short verde con franja lateral dorada'),
       socks: piece('titular-medias', 1001, 983, 'medias verdes con botines verdes'),
     },
-    frontHotspots: [
-      { id: 'cuello', x: 61, y: 14, title: 'Cuello polo', text: 'Solapa en V con ribete dorado.' },
-      { id: 'escudo', x: 84, y: 27, title: 'El escudo', text: 'Sobre el pecho izquierdo, del lado del corazón.' },
-      { id: 'vezza', x: 60, y: 42, title: 'VEZZA', text: 'El logo del sponsor, centrado en el pecho.' },
-      { id: 'parche', x: 8, y: 31, title: 'Parche de manga', text: 'Círculo con la “R” y el rayo.' },
-      { id: 'punos', x: 12, y: 46, title: 'Puños', text: 'Franjas doradas que cierran la manga.' },
+    hotspots: [
+      { id: 'cuello', title: 'Cuello polo', text: 'Solapa en V con ribete dorado.' },
+      { id: 'escudo', title: 'El escudo', text: 'Sobre el pecho izquierdo, del lado del corazón.' },
+      { id: 'vezza', title: 'VEZZA', text: 'El logo del sponsor, centrado en el pecho.' },
+      { id: 'parche', title: 'Parche de manga', text: 'Círculo con la “R” y el rayo.' },
+      { id: 'punos', title: 'Puños', text: 'Franjas doradas que cierran la manga.' },
       {
         id: 'textura',
-        x: 44,
-        y: 74,
         title: 'Curvas de nivel',
         text: 'Textura topográfica en toda la tela, como un mapa del pago.',
       },
-    ],
-    backHotspots: [
-      { id: 'nombre', x: 50, y: 12, title: 'MEZZAVILLA', text: 'Nombre en la espalda, en dorado.' },
-      { id: 'numero', x: 50, y: 42, title: 'El 11', text: 'Número grande con contorno.' },
-      { id: 'sponsor', x: 50, y: 63, title: 'Tom’s Burger', text: 'Sponsor trasero en letra script retro.' },
+      { id: 'nombre', title: 'MEZZAVILLA', text: 'Nombre en la espalda, en dorado.' },
+      { id: 'numero', title: 'El 11', text: 'Número grande con contorno.' },
+      { id: 'sponsor', title: 'Tom’s Burger', text: 'Sponsor trasero en letra script retro.' },
+      { id: 'shortEscudo', title: 'Escudo en el short', text: 'Abajo, en la pierna derecha, junto a la franja dorada.' },
     ],
   },
   {
@@ -135,18 +127,17 @@ const KIT_LIST: KitData[] = [
       shorts: piece('suplente-short', 862, 726, 'short verde con franja lateral crema y dorada'),
       socks: piece('suplente-medias', 990, 979, 'medias crema con botines blancos'),
     },
-    frontHotspots: [
-      { id: 'cuello', x: 59, y: 17, title: 'Cuello polo', text: 'Solapa en V con ribete verde y dorado.' },
-      { id: 'escudo', x: 79, y: 28, title: 'El escudo', text: 'Sobre el pecho izquierdo, del lado del corazón.' },
-      { id: 'vezza', x: 58, y: 43, title: 'VEZZA', text: 'El logo del sponsor, centrado en el pecho.' },
-      { id: 'parche', x: 8, y: 33, title: 'Parche de manga', text: 'Círculo con la “R” y el rayo.' },
-      { id: 'punos', x: 10, y: 43, title: 'Puños', text: 'Franjas verde y dorada que cierran la manga.' },
-      { id: 'textura', x: 40, y: 72, title: 'Textura', text: 'Curvas de nivel apenas marcadas en la tela.' },
-    ],
-    backHotspots: [
-      { id: 'nombre', x: 50, y: 12, title: 'MEZZAVILLA', text: 'Nombre en la espalda, en verde.' },
-      { id: 'numero', x: 51, y: 44, title: 'El 11', text: 'Número grande con contorno.' },
-      { id: 'sponsor', x: 51, y: 66, title: 'Tom’s Burger', text: 'Sponsor trasero en letra script retro.' },
+    hotspots: [
+      { id: 'cuello', title: 'Cuello polo', text: 'Solapa en V con ribete verde y dorado.' },
+      { id: 'escudo', title: 'El escudo', text: 'Sobre el pecho izquierdo, del lado del corazón.' },
+      { id: 'vezza', title: 'VEZZA', text: 'El logo del sponsor, centrado en el pecho.' },
+      { id: 'parche', title: 'Parche de manga', text: 'Círculo con la “R” y el rayo.' },
+      { id: 'punos', title: 'Puños', text: 'Franjas verde y dorada que cierran la manga.' },
+      { id: 'textura', title: 'Textura', text: 'Curvas de nivel apenas marcadas en la tela.' },
+      { id: 'nombre', title: 'MEZZAVILLA', text: 'Nombre en la espalda, en verde.' },
+      { id: 'numero', title: 'El 11', text: 'Número grande con contorno.' },
+      { id: 'sponsor', title: 'Tom’s Burger', text: 'Sponsor trasero en letra script retro.' },
+      { id: 'shortEscudo', title: 'Escudo en el short', text: 'Abajo, en la pierna derecha, junto a la franja crema.' },
     ],
   },
 ]

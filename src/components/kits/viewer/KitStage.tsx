@@ -3,12 +3,11 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import * as THREE from 'three'
 import type { Hotspot, KitId } from '../../../data/kits'
-import { facingAngle, type AnchorId } from '../../../three/anchors'
+import { DECALS, facingAngle, type AnchorId } from '../../../three/anchors'
 import { KitModel, type KitView } from '../../../three/KitModel'
 import { viewBounds, type KitSceneData } from '../../../three/kitScene'
 import { StudioLights } from '../../../three/StudioLights'
 import type { KitTextures } from '../../../three/useKitScene'
-import { HotspotPin } from './HotspotPin'
 import { isFacing, shortestTurn, spinStep } from './spin'
 
 export const FOV = 26
@@ -34,16 +33,17 @@ interface KitStageProps {
   textures: Record<KitId, KitTextures>
   hotspots: Hotspot[]
   activeHotspot: AnchorId | null
-  onHotspot: (id: AnchorId) => void
+  /** Puntos de los detalles (DOM, encima del canvas): el escenario los ubica cada cuadro. */
+  pins: RefObject<Partial<Record<AnchorId, HTMLDivElement | null>>>
   spin: RefObject<SpinControl>
   reduced: boolean
-  /** Corre hacia un costado el encuadre (px), para dejar lugar a la tarjeta del detalle en desktop. */
+  /** Con un detalle en foco, corre el modelo esta cantidad de px a la izquierda (lugar para la tarjeta). */
   focusShift: number
 }
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
 
-export function KitStage({ kit, view, scene, textures, hotspots, activeHotspot, onHotspot, spin, reduced, focusShift }: KitStageProps) {
+export function KitStage({ kit, view, scene, textures, hotspots, activeHotspot, pins, spin, reduced, focusShift }: KitStageProps) {
   const camera = useThree((s) => s.camera as THREE.PerspectiveCamera)
   const size = useThree((s) => s.size)
   const model = useRef<THREE.Group>(null)
@@ -73,6 +73,23 @@ export function KitStage({ kit, view, scene, textures, hotspots, activeHotspot, 
   }, [scene, size.width, size.height])
 
   const anchors = scene.anchors
+  // Dónde va cada punto: en los diseños, arriba a la derecha del logo (para no taparlo); en lo demás, sobre el ancla.
+  const pinPoints = useMemo(() => {
+    const up = new THREE.Vector3(0, 1, 0)
+    return Object.fromEntries(
+      (Object.keys(anchors) as AnchorId[]).map((id) => {
+        const a = anchors[id]
+        const decal = DECALS.find((d) => d.anchor === id)
+        const p = a.position.clone().addScaledVector(a.normal, 0.004)
+        if (decal) {
+          const right = new THREE.Vector3().crossVectors(up, a.normal).normalize()
+          const tUp = new THREE.Vector3().crossVectors(a.normal, right).normalize()
+          p.addScaledVector(right, decal.size[0] / 2 + 0.012).addScaledVector(tUp, decal.size[1] / 2 - 0.004)
+        }
+        return [id, p]
+      }),
+    ) as Record<AnchorId, THREE.Vector3>
+  }, [anchors])
   const active = activeHotspot ? anchors[activeHotspot] : null
   const camGoal = useRef({ pos: new THREE.Vector3(), look: new THREE.Vector3() })
   const lookAt = useRef(new THREE.Vector3().copy(frames[view].center))
@@ -123,41 +140,42 @@ export function KitStage({ kit, view, scene, textures, hotspots, activeHotspot, 
     if (active && g) {
       const p = active.position.clone().applyEuler(g.rotation)
       goal.look.copy(p).lerp(f.center, 0.25)
-      goal.pos.set(goal.look.x, goal.look.y, goal.look.z + f.dist * (view === 'full' ? 0.32 : 0.55))
+      goal.pos.set(goal.look.x, goal.look.y, goal.look.z + f.dist * (view === 'full' ? 0.42 : 0.72))
     } else {
       goal.look.copy(f.center)
       goal.pos.set(f.center.x, f.center.y + f.dist * 0.04, f.center.z + f.dist)
     }
     // Lugar para la tarjeta: el encuadre se corre en pantalla
-    camera.setViewOffset(size.width, size.height, active ? -focusShift : 0, 0, size.width, size.height)
+    camera.setViewOffset(size.width, size.height, active ? focusShift : 0, 0, size.width, size.height)
     const k = first.current || reduced ? 1 : 1 - Math.exp(-delta * 4.5)
     camera.position.lerp(goal.pos, k)
     lookAt.current.lerp(goal.look, k)
     camera.lookAt(lookAt.current)
     first.current = false
 
-    // Detalles: solo se ven y se tocan los que miran a la cámara
+    // Detalles: cada punto sigue a su ancla en pantalla; solo se ven y se tocan los que miran a la cámara
     if (g) {
+      camera.updateMatrixWorld()
       const toCam = new THREE.Vector3()
       const n = new THREE.Vector3()
       const p = new THREE.Vector3()
       for (const h of hotspots) {
         const el = pins.current[h.id]
         if (!el) continue
-        const a = anchors[h.id]
-        n.copy(a.normal).applyEuler(g.rotation)
-        p.copy(a.position).applyEuler(g.rotation)
+        n.copy(anchors[h.id].normal).applyEuler(g.rotation)
+        p.copy(pinPoints[h.id]).applyEuler(g.rotation)
         toCam.copy(camera.position).sub(p).normalize()
         const visible = (view === 'full' || h.id !== 'shortEscudo') && !sw && isFacing(n, toCam)
         if (el.dataset.visible !== String(visible)) {
           el.dataset.visible = String(visible)
           el.inert = !visible
         }
+        p.project(camera)
+        el.style.transform = `translate3d(${((p.x + 1) / 2) * size.width}px, ${((1 - p.y) / 2) * size.height}px, 0)`
       }
     }
   })
 
-  const pins = useRef<Partial<Record<AnchorId, HTMLDivElement | null>>>({})
   const full = view === 'full'
   const floorY = useMemo(() => viewBounds(scene, 'shirt').min.y - 0.12, [scene])
 
@@ -166,19 +184,6 @@ export function KitStage({ kit, view, scene, textures, hotspots, activeHotspot, 
       <StudioLights />
       <group ref={model}>
         <KitModel kit={shownKit} view={view} scene={scene} textures={textures[shownKit]} instant={reduced} />
-        {hotspots.map((h, i) => (
-          <HotspotPin
-            key={h.id}
-            ref={(el) => {
-              pins.current[h.id] = el
-            }}
-            position={anchors[h.id].position}
-            index={i}
-            hotspot={h}
-            active={activeHotspot === h.id}
-            onSelect={onHotspot}
-          />
-        ))}
       </group>
       <ContactShadows position={[0, full ? 0 : floorY, 0]} opacity={full ? 0.5 : 0.28} scale={full ? 2.4 : 1.6} blur={2.6} far={1.2} resolution={512} frames={reduced ? 1 : Infinity} />
     </>

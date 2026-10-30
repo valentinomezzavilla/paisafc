@@ -5,7 +5,7 @@ import { useIdleReady } from '../../hooks/useIdleReady'
 import { gsap, MOTION, useGSAP } from '../../lib/gsap'
 import { KitPicture } from '../ui/KitPicture'
 import { Topo } from '../ui/Topo'
-import { kitVars } from './KitLayer'
+import { kitVars } from './KitBackdrop'
 
 /** Cierre de la sección: titular y suplente lado a lado, cada una sobre su color. */
 export function KitsTogether() {

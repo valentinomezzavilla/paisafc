@@ -29,13 +29,15 @@ export const hero = {
 export const kitsSection = {
   eyebrow: 'Las camisetas',
   title: 'Hechas para el pago',
-  steps: {
-    front: 'De frente',
-    back: 'La espalda',
-    full: 'Kit completo',
+  views: {
+    shirt: 'Camiseta',
+    full: 'Conjunto',
   },
+  dragHint: 'Arrastrá para girarla',
   hotspotHint: 'Tocá los puntos para ver cada detalle',
-  swipeHint: 'Deslizá para girarla',
+  viewerLabel: 'Camiseta en 3D. Arrastrá o usá las flechas para girarla.',
+  detailsTitle: 'Detalles',
+  closeDetail: 'Cerrar detalle',
   together: {
     eyebrow: 'Las dos juntas',
     title: 'Una para cada domingo',

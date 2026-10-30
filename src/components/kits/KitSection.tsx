@@ -1,185 +1,75 @@
-import { useLayoutEffect, useRef, useState, type PointerEvent } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { DEFAULT_KIT, getKit, KITS, type KitId } from '../../data/kits'
 import { kitsSection } from '../../data/texts'
 import { useIdleReady } from '../../hooks/useIdleReady'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
-import { gsap, MOTION, ScrollTrigger, useGSAP } from '../../lib/gsap'
-import { scrollToY } from '../../lib/scroll'
-import { kitVars, KitLayer } from './KitLayer'
+import { gsap, MOTION } from '../../lib/gsap'
+import type { AnchorId } from '../../three/anchors'
+import type { KitView } from '../../three/KitModel'
+import { KitBackdrop, kitVars } from './KitBackdrop'
+import { KitPoster } from './KitPoster'
 import { KitSwitcher } from './KitSwitcher'
-import { StepNav } from './StepNav'
-import { STEPS, type Step } from './steps'
+import { ViewToggle } from './ViewToggle'
+import { HotspotCard } from './viewer/HotspotCard'
+import { ViewerBoundary } from './viewer/ViewerBoundary'
 
-// Escala de la caja de la camiseta cuando se arma el kit completo (camiseta + short + medias
-// ocupan ~2,2 veces el alto de la camiseta sola).
-const FULL_KIT_SCALE = 0.455
-const FRONT_COUNT = Math.max(...KITS.map((k) => k.frontHotspots.length))
-const BACK_COUNT = Math.max(...KITS.map((k) => k.backHotspots.length))
-// Largo del recorrido fijo, en altos de pantalla.
-const PIN_SCREENS = 5
+// three y el modelo van en un chunk aparte: no pesan en la primera pantalla.
+const KitViewer = lazy(() => import('./viewer/KitViewer'))
+
+/** Ancho que ocupa la tarjeta del detalle en desktop; el modelo se corre la mitad para dejarle lugar. */
+const CARD_W = 288
+
+function supportsWebGL() {
+  try {
+    const c = document.createElement('canvas')
+    return Boolean(c.getContext('webgl2') ?? c.getContext('webgl'))
+  } catch {
+    return false
+  }
+}
 
 export function KitSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const layerRefs = useRef<Partial<Record<KitId, HTMLDivElement | null>>>({})
-  const stRef = useRef<ScrollTrigger | null>(null)
   const wipeOrigin = useRef<{ x: number; y: number } | null>(null)
   const zIndex = useRef(1)
-  const autoHotspot = useRef<string | null>(null)
 
   const [activeId, setActiveId] = useState<KitId>(DEFAULT_KIT.id)
   const [wipeFrom, setWipeFrom] = useState<KitId | null>(null)
-  const [step, setStep] = useState<Step>('front')
-  const [activeHotspot, setActiveHotspot] = useState<string | null>(null)
+  const [view, setView] = useState<KitView>('shirt')
+  const [activeHotspot, setActiveHotspot] = useState<AnchorId | null>(null)
+  const [viewerReady, setViewerReady] = useState(false)
+  const [viewerFailed, setViewerFailed] = useState(false)
+  const [hint, setHint] = useState(true)
   const isDesktop = useMediaQuery('(min-width: 768px)')
-  const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)')
-  const assetsReady = useIdleReady()
+  const idle = useIdleReady()
 
-  const activeKit = getKit(activeId)
-  const activeKitRef = useRef(activeKit)
-  activeKitRef.current = activeKit
+  const kit = getKit(activeId)
+  const hotspots = kit.hotspots.filter((h) => view === 'full' || h.id !== 'shortEscudo')
+  const activeIndex = hotspots.findIndex((h) => h.id === activeHotspot)
 
-  // ------------------------------------------------------------ historia con scroll
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia()
-      mm.add({ full: MOTION.full, reduced: MOTION.reduced }, (ctx) => {
-        const reduced = Boolean(ctx.conditions?.reduced)
-        const q = gsap.utils.selector(stageRef)
-        const front = q('[data-view="front"]')
-        const back = q('[data-view="back"]')
+  // El visor se monta cuando el navegador queda libre y la sección está a menos de una pantalla.
+  const [near, setNear] = useState(false)
+  const [webgl, setWebgl] = useState(true)
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && setNear(true), { rootMargin: '100% 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  useEffect(() => setWebgl(supportsWebGL()), [])
+  const mountViewer = idle && near && webgl && !viewerFailed
+  const showPoster = !viewerReady || viewerFailed || !webgl
 
-        const tl = gsap.timeline({ defaults: { ease: 'none' } })
-
-        // 1. Entra la camiseta de frente
-        tl.addLabel('enter')
-        tl.fromTo(front, reduced ? { opacity: 0 } : { opacity: 0, yPercent: 16, rotateY: -32, scale: 0.84 }, {
-          opacity: 1,
-          yPercent: 0,
-          rotateY: 0,
-          scale: 1,
-          duration: 1,
-          ease: 'power3.out',
-        })
-        tl.from(q('[data-kit-head]'), { opacity: 0, y: reduced ? 0 : 40, duration: 0.7, ease: 'power2.out' }, 0.1)
-
-        // 2. Hotspots del frente, uno por uno
-        for (let i = 0; i < FRONT_COUNT; i++) {
-          tl.addLabel(`front-${i}`)
-          tl.fromTo(
-            q(`[data-hotspot="front-${i}"]`),
-            { opacity: 0, scale: reduced ? 1 : 0 },
-            { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2.2)' },
-          )
-          tl.to({}, { duration: 0.45 })
-        }
-
-        // 3. Gira y muestra la espalda
-        tl.addLabel('flip')
-        tl.to(q('[data-hotspot^="front-"]'), { opacity: 0, scale: reduced ? 1 : 0.5, duration: 0.25 })
-        if (reduced) {
-          tl.to(front, { opacity: 0, duration: 0.5 })
-          tl.fromTo(back, { opacity: 0 }, { opacity: 1, duration: 0.5 }, '<')
-        } else {
-          tl.to(front, { rotateY: 90, duration: 0.5, ease: 'power2.in' })
-          tl.set(front, { opacity: 0 })
-          tl.fromTo(back, { opacity: 0, rotateY: -90 }, { opacity: 1, rotateY: 0, duration: 0.55, ease: 'power2.out' })
-        }
-        tl.addLabel('back')
-        for (let i = 0; i < BACK_COUNT; i++) {
-          tl.addLabel(`back-${i}`)
-          tl.fromTo(
-            q(`[data-hotspot="back-${i}"]`),
-            { opacity: 0, scale: reduced ? 1 : 0 },
-            { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2.2)' },
-          )
-          tl.to({}, { duration: 0.45 })
-        }
-
-        // 4. Kit completo: vuelve el frente y se ensamblan short y medias
-        tl.addLabel('assemble')
-        tl.to(q('[data-hotspot^="back-"]'), { opacity: 0, duration: 0.25 })
-        tl.to(back, { opacity: 0, duration: 0.35 })
-        tl.set(front, { rotateY: 0 })
-        tl.to(front, { opacity: 1, duration: 0.35 }, '<')
-        tl.to(q('[data-assembly]'), {
-          scale: FULL_KIT_SCALE,
-          transformOrigin: '50% 0%',
-          duration: 1,
-          ease: 'power2.inOut',
-        })
-        tl.fromTo(
-          q('[data-piece="shorts"]'),
-          { opacity: 0, yPercent: reduced ? 0 : 70 },
-          { opacity: 1, yPercent: 0, duration: 0.7, ease: 'power3.out' },
-          '<0.35',
-        )
-        tl.fromTo(
-          q('[data-piece="socks"]'),
-          { opacity: 0, yPercent: reduced ? 0 : 70 },
-          { opacity: 1, yPercent: 0, duration: 0.7, ease: 'power3.out' },
-          '<0.2',
-        )
-        tl.addLabel('full')
-        tl.to({}, { duration: 0.8 })
-
-        // El 11 gigante del fondo se mueve más lento que la prenda
-        if (!reduced) tl.fromTo(q('[data-big-number]'), { yPercent: 7 }, { yPercent: -7, duration: tl.duration() }, 0)
-
-        const st = ScrollTrigger.create({
-          animation: tl,
-          trigger: stageRef.current,
-          start: 'top top',
-          end: () => `+=${window.innerHeight * PIN_SCREENS}`,
-          pin: true,
-          scrub: reduced ? true : 0.7,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            const t = self.progress * tl.duration()
-            const labels = tl.labels
-            const nextStep: Step = t < labels.flip + 0.4 ? 'front' : t < labels.assemble ? 'back' : 'full'
-            setStep(nextStep)
-
-            // El hotspot que va apareciendo se abre solo; tocar otro lo reemplaza.
-            const kit = activeKitRef.current
-            let auto: string | null = null
-            if (nextStep === 'front') {
-              kit.frontHotspots.forEach((h, i) => {
-                if (t >= labels[`front-${i}`] + 0.2) auto = h.id
-              })
-            } else if (nextStep === 'back') {
-              kit.backHotspots.forEach((h, i) => {
-                if (t >= labels[`back-${i}`] + 0.2) auto = h.id
-              })
-            }
-            if (auto !== autoHotspot.current) {
-              autoHotspot.current = auto
-              setActiveHotspot(auto)
-            }
-          },
-        })
-        stRef.current = st
-        return () => {
-          stRef.current = null
-        }
-      })
-    },
-    { scope: sectionRef },
-  )
-
-  const jumpTo = (target: Step) => {
-    const st = stRef.current
-    if (!st) return
-    const label = target === 'front' ? 'front-1' : target === 'back' ? 'back-0' : 'full'
-    scrollToY(st.labelToScroll(label) + 4)
-  }
-
-  // ------------------------------------------------------------ cambio de kit (wipe)
+  // ------------------------------------------------------------ cambio de kit (wipe del fondo)
   const selectKit = (id: KitId, button: HTMLElement) => {
     if (id === activeId || wipeFrom) return
     const stage = stageRef.current!.getBoundingClientRect()
     const b = button.getBoundingClientRect()
     wipeOrigin.current = { x: b.left + b.width / 2 - stage.left, y: b.top + b.height / 2 - stage.top }
+    setActiveHotspot(null)
     setWipeFrom(activeId)
     setActiveId(id)
   }
@@ -209,97 +99,108 @@ export function KitSection() {
     }
   }, [activeId])
 
-  // ------------------------------------------------------------ tilt + brillo (desktop)
-  const tilt = useRef<{ x: gsap.QuickToFunc; y: gsap.QuickToFunc } | null>(null)
-  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (!finePointer || window.matchMedia(MOTION.reduced).matches) return
-    const stage = stageRef.current!
-    const targets = stage.querySelectorAll('[data-tilt]')
-    tilt.current ??= {
-      x: gsap.quickTo(targets, 'rotationY', { duration: 0.8, ease: 'power3.out' }),
-      y: gsap.quickTo(targets, 'rotationX', { duration: 0.8, ease: 'power3.out' }),
-    }
-    const box = layerRefs.current[activeId]?.querySelector('[data-assembly]')?.getBoundingClientRect()
-    const rect = stage.getBoundingClientRect()
-    const nx = (e.clientX - rect.left) / rect.width - 0.5
-    const ny = (e.clientY - rect.top) / rect.height - 0.5
-    tilt.current.x(nx * 16)
-    tilt.current.y(-ny * 10)
-    if (box) {
-      stage.style.setProperty('--mx', `${((e.clientX - box.left) / box.width) * 100}%`)
-      stage.style.setProperty('--my', `${((e.clientY - box.top) / box.height) * 100}%`)
-      stage.style.setProperty('--sheen-o', '1')
-    }
-  }
-  const onPointerLeave = () => {
-    tilt.current?.x(0)
-    tilt.current?.y(0)
-    stageRef.current?.style.setProperty('--sheen-o', '0')
+  const onViewerReady = useCallback(() => setViewerReady(true), [])
+  const onInteract = useCallback(() => setHint(false), [])
+  const selectHotspot = useCallback((id: AnchorId | null) => {
+    setActiveHotspot(id)
+    if (id) setHint(false)
+  }, [])
+  const changeView = (v: KitView) => {
+    setView(v)
+    setActiveHotspot(null)
   }
 
-  // ------------------------------------------------------------ swipe para girar (mobile)
-  const swipeStart = useRef<{ x: number; y: number } | null>(null)
-  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === 'touch') swipeStart.current = { x: e.clientX, y: e.clientY }
-  }
-  const onPointerUp = (e: PointerEvent<HTMLDivElement>) => {
-    const start = swipeStart.current
-    swipeStart.current = null
-    if (!start) return
-    const dx = e.clientX - start.x
-    const dy = e.clientY - start.y
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return
-    if (step === 'front') jumpTo('back')
-    else if (step === 'back') jumpTo('front')
-  }
-
-  const toggleHotspot = (id: string) => setActiveHotspot((cur) => (cur === id ? null : id))
-  const stepLabel = STEPS.find((s) => s.id === step)?.label
+  const card = activeIndex >= 0 && (
+    <HotspotCard key={hotspots[activeIndex].id} hotspot={hotspots[activeIndex]} index={activeIndex} onClose={() => setActiveHotspot(null)} />
+  )
 
   return (
     <section id="camisetas" ref={sectionRef} aria-label={kitsSection.eyebrow} className="relative">
-      <div
-        ref={stageRef}
-        onPointerMove={onPointerMove}
-        onPointerLeave={onPointerLeave}
-        onPointerDown={onPointerDown}
-        onPointerUp={onPointerUp}
-        onKeyDown={(e) => e.key === 'Escape' && setActiveHotspot(null)}
-        className="relative h-svh touch-pan-y overflow-hidden [--shirt-w:min(68vw,calc(48svh*0.708))] md:[--shirt-w:min(32vw,calc(62svh*0.708),480px)]"
-        style={kitVars(activeKit)}
-      >
-        {KITS.map((kit) => (
-          <KitLayer
-            key={kit.id}
+      <div ref={stageRef} className="relative h-svh min-h-[34rem] overflow-hidden" style={kitVars(kit)}>
+        {KITS.map((k) => (
+          <KitBackdrop
+            key={k.id}
             ref={(el) => {
-              layerRefs.current[kit.id] = el
+              layerRefs.current[k.id] = el
             }}
-            kit={kit}
-            active={kit.id === activeId}
-            visible={kit.id === activeId || kit.id === wipeFrom}
-            step={step}
-            activeHotspot={activeHotspot}
-            isDesktop={isDesktop}
-            assetsReady={assetsReady}
-            onToggleHotspot={toggleHotspot}
+            kit={k}
+            visible={k.id === activeId || k.id === wipeFrom}
           />
         ))}
 
-        {/* Controles: viven arriba de las capas y toman la paleta del kit activo */}
-        <div className="absolute inset-x-0 bottom-0 z-[100] flex flex-col items-center gap-2 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:flex-row md:justify-between md:px-12 md:pb-8 lg:px-20">
-          <StepNav step={step} onJump={jumpTo} />
-          <KitSwitcher kits={KITS} activeId={activeId} onSelect={selectKit} />
-          <p className="hidden w-48 text-right text-xs text-(--kit-muted) transition-colors duration-700 md:block">
-            {step === 'full' ? '' : kitsSection.hotspotHint}
-          </p>
+        {/* Póster mientras carga el visor (y si no hay WebGL) */}
+        <div
+          aria-hidden={!showPoster}
+          className={`pointer-events-none absolute inset-0 z-[5] pt-40 pb-40 transition-opacity duration-700 md:pt-16 md:pb-24 ${showPoster ? 'opacity-100' : 'opacity-0'}`}
+        >
+          <KitPoster kit={kit} view={view} className="size-full" />
         </div>
-        <p className="absolute inset-x-0 bottom-28 z-[90] text-center text-xs text-(--kit-muted) md:hidden">
-          {step === 'front' && !activeHotspot ? kitsSection.swipeHint : ''}
+
+        {mountViewer && (
+          <div className="absolute inset-0 z-10 pt-40 pb-40 md:pt-16 md:pb-24">
+            <div className="relative size-full">
+              <ViewerBoundary onError={() => setViewerFailed(true)}>
+                <Suspense fallback={null}>
+                  <KitViewer
+                    kit={activeId}
+                    view={view}
+                    hotspots={hotspots}
+                    activeHotspot={activeHotspot}
+                    onHotspot={selectHotspot}
+                    onReady={onViewerReady}
+                    onInteract={onInteract}
+                    onError={() => setViewerFailed(true)}
+                    label={`${kit.fullName}. ${kitsSection.viewerLabel}`}
+                    focusShift={isDesktop ? CARD_W / 2 + 24 : 0}
+                  />
+                </Suspense>
+              </ViewerBoundary>
+            </div>
+          </div>
+        )}
+
+        {/* Detalle abierto: al costado del modelo en desktop, abajo en mobile */}
+        {card && (
+          <div className="absolute inset-x-4 bottom-36 z-[95] md:inset-x-auto md:top-1/2 md:right-12 md:bottom-auto md:w-72 md:-translate-y-1/2 lg:right-20">
+            {card}
+          </div>
+        )}
+
+        {/* Sin visor 3D: los detalles como lista */}
+        {(viewerFailed || !webgl) && (
+          <ul className="absolute top-1/2 right-4 z-20 hidden max-w-60 -translate-y-1/2 space-y-1 text-sm text-(--kit-muted) md:right-12 md:block">
+            {hotspots.map((h, i) => (
+              <li key={h.id}>
+                <span className="font-jersey font-bold text-(--kit-accent)">{String(i + 1).padStart(2, '0')}</span> {h.title}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Controles: arriba de todo, con la paleta del kit activo */}
+        <div className="absolute inset-x-0 bottom-0 z-[100] flex flex-col items-center gap-2 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:flex-row md:justify-between md:px-12 md:pb-8 lg:px-20">
+          <ViewToggle view={view} onChange={changeView} />
+          <KitSwitcher kits={KITS} activeId={activeId} onSelect={selectKit} />
+          <p className="hidden w-56 text-right text-xs text-(--kit-muted) transition-opacity duration-700 md:block">{kitsSection.hotspotHint}</p>
+        </div>
+        <p
+          aria-hidden
+          className={`pointer-events-none absolute inset-x-0 bottom-36 z-[90] text-center font-jersey text-xs font-bold tracking-[0.25em] text-(--kit-muted) uppercase transition-opacity duration-700 md:bottom-28 ${
+            hint && viewerReady && !activeHotspot ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          ← {kitsSection.dragHint} →
         </p>
 
+        {/* Para lectores de pantalla: kit, vista y detalles */}
         <p className="sr-only" aria-live="polite">
-          {`${activeKit.fullName}, ${stepLabel}`}
+          {`${kit.fullName}, ${kitsSection.views[view]}`}
         </p>
+        <ul className="sr-only" aria-label={kitsSection.detailsTitle}>
+          {hotspots.map((h) => (
+            <li key={h.id}>{`${h.title}: ${h.text}`}</li>
+          ))}
+        </ul>
       </div>
     </section>
   )

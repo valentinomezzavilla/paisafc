@@ -7,6 +7,7 @@ import { MOTION } from '../../../lib/gsap'
 import type { AnchorId } from '../../../three/anchors'
 import type { KitView } from '../../../three/KitModel'
 import { useKitAssets } from '../../../three/useKitScene'
+import { HotspotPin } from './HotspotPin'
 import { FOV, KitStage, MAX_TILT, type SpinControl } from './KitStage'
 
 const KIT_IDS = KITS.map((k) => k.id)
@@ -27,6 +28,8 @@ export interface KitViewerProps {
   onReady: () => void
   /** El usuario giró la camiseta: se apaga la pista. */
   onInteract: () => void
+  /** No se pudo cargar el modelo: queda el póster. */
+  onError: () => void
   label: string
   /** Lugar que ocupa la tarjeta del detalle en desktop (px), para correr el encuadre. */
   focusShift?: number
@@ -36,12 +39,14 @@ export interface KitViewerProps {
  * Visor 3D de la sección de camisetas. Se gira arrastrando (en el celu solo el gesto horizontal: el
  * vertical sigue scrolleando la página), con las flechas, o tocando un detalle, que lo pone de frente.
  */
-export default function KitViewer({ kit, view, hotspots, activeHotspot, onHotspot, onReady, onInteract, label, focusShift = 0 }: KitViewerProps) {
-  const assets = useKitAssets(KIT_IDS)
+export default function KitViewer({ kit, view, hotspots, activeHotspot, onHotspot, onReady, onInteract, onError, label, focusShift = 0 }: KitViewerProps) {
+  const loaded = useKitAssets(KIT_IDS)
+  const assets = loaded === 'error' ? null : loaded
   const reduced = useMediaQuery(MOTION.reduced)
   const wrap = useRef<HTMLDivElement>(null)
   const spin = useRef<SpinControl>({ angle: -1.1, velocity: 0, tilt: 0, dragging: false, target: null })
   const [inView, setInView] = useState(false)
+  const pins = useRef<Partial<Record<AnchorId, HTMLDivElement | null>>>({})
 
   // Fuera de pantalla no se dibuja. La primera vez que entra, medio giro de presentación.
   const introDone = useRef(false)
@@ -60,8 +65,9 @@ export default function KitViewer({ kit, view, hotspots, activeHotspot, onHotspo
   }, [inView, assets, reduced])
 
   useEffect(() => {
-    if (assets) onReady()
-  }, [assets, onReady])
+    if (loaded === 'error') onError()
+    else if (loaded) onReady()
+  }, [loaded, onReady, onError])
 
   // ------------------------------------------------------------ arrastre
   const drag = useRef<{ x: number; y: number; lastX: number; lastT: number; axis: 'x' | 'y' | null; moved: boolean; id: number } | null>(null)
@@ -137,7 +143,7 @@ export default function KitViewer({ kit, view, hotspots, activeHotspot, onHotspo
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
       onKeyDown={onKeyDown}
-      className="absolute inset-0 cursor-grab touch-pan-y outline-none select-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-(--kit-accent) focus-visible:ring-inset"
+      className="absolute inset-0 cursor-grab touch-pan-y overflow-hidden outline-none select-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-(--kit-accent) focus-visible:ring-inset"
     >
       {assets && (
         <Canvas
@@ -145,7 +151,7 @@ export default function KitViewer({ kit, view, hotspots, activeHotspot, onHotspo
           shadows
           dpr={[1, 2]}
           camera={{ fov: FOV, near: 0.05, far: 20 }}
-          gl={{ antialias: true, alpha: true, toneMapping: THREE.AgXToneMapping, toneMappingExposure: 1.35 }}
+          gl={{ antialias: true, alpha: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: 1.05 }}
           aria-hidden
         >
           <KitStage
@@ -155,13 +161,26 @@ export default function KitViewer({ kit, view, hotspots, activeHotspot, onHotspo
             textures={assets.textures}
             hotspots={hotspots}
             activeHotspot={activeHotspot}
-            onHotspot={onHotspot}
+            pins={pins}
             spin={spin}
             reduced={reduced}
             focusShift={focusShift}
           />
         </Canvas>
       )}
+      {assets &&
+        hotspots.map((h, i) => (
+          <HotspotPin
+            key={h.id}
+            ref={(el) => {
+              pins.current[h.id] = el
+            }}
+            hotspot={h}
+            index={i}
+            active={activeHotspot === h.id}
+            onSelect={onHotspot}
+          />
+        ))}
     </div>
   )
 }
