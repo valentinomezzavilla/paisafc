@@ -55,6 +55,15 @@ export function createFabricNormalMap(size = 512): THREE.CanvasTexture {
   return knitMap
 }
 
+/**
+ * Repeticiones de la trama en [u, v]. Alrededor de la pieza (u va de 0 a 1) se redondea a un entero:
+ * con un número fraccionario la trama salta en la costura de UV.
+ */
+export function knitRepeat(perimeter: number): [number, number] {
+  const tile = KNIT_CELL * CELLS
+  return [Math.max(1, Math.round(perimeter / tile)), 1 / tile]
+}
+
 interface FabricOptions {
   /** Perímetro en metros de la pieza (el u del loft va de 0 a 1 alrededor). */
   perimeter?: number
@@ -67,8 +76,7 @@ interface FabricOptions {
 export function fabricMaterial(color: string, { perimeter = 1, sheenColor, roughness = 0.82, inner = false }: FabricOptions = {}): THREE.MeshPhysicalMaterial {
   const map = createFabricNormalMap().clone()
   map.needsUpdate = true
-  const tile = KNIT_CELL * CELLS
-  map.repeat.set(perimeter / tile, 1 / tile)
+  map.repeat.set(...knitRepeat(perimeter))
 
   const base = new THREE.Color(color)
   if (inner) base.multiplyScalar(0.45)
