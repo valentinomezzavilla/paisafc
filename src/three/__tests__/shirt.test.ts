@@ -21,7 +21,7 @@ describe('buildShirt', () => {
   it('el torso va del ruedo al cuello', () => {
     const box = bbox(shirt.body)
     expect(box.min.y).toBeCloseTo(shirt.hemY, 3)
-    expect(shirt.hemY).toBeCloseTo(BODY.crotch + 0.01, 5)
+    expect(shirt.hemY).toBeCloseTo(BODY.crotch + 0.07, 5)
     expect(box.max.y).toBeGreaterThanOrEqual(BODY.neckBase - 0.02)
   })
 

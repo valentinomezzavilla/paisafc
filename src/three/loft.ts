@@ -125,6 +125,12 @@ export function tubeRing(
   })
 }
 
+/** Espejo en x de un anillo, conservando el punto 0 y el sentido de giro (y con él, las normales hacia afuera). */
+export function mirrorX(ring: Ring): Ring {
+  const m = ring.map((p) => new THREE.Vector3(-p.x, p.y, p.z))
+  return [m[0], ...m.slice(1).reverse()]
+}
+
 /** Fracción de normales que apuntan hacia afuera de `center(p)`. Lo usan los tests. */
 export function outwardNormalRatio(geo: THREE.BufferGeometry, center: (p: THREE.Vector3) => THREE.Vector3): number {
   const pos = geo.getAttribute('position')

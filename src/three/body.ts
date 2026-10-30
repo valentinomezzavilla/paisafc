@@ -22,5 +22,5 @@ export const BODY = {
   shoulderHalfWidth: 0.215,
   neckRadius: 0.065,
   /** Centro de cada pierna en x = ±legSpacing. */
-  legSpacing: 0.095,
+  legSpacing: 0.115,
 } as const

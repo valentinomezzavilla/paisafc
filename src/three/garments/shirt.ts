@@ -19,7 +19,8 @@ export interface ShirtParts {
 export const TORSO_SEGMENTS = 96
 export const SLEEVE_SEGMENTS = 48
 
-const HEM_Y = BODY.crotch + 0.01
+// Como en el mockup: la camiseta termina sobre la cadera y deja ver bien el short.
+const HEM_Y = BODY.crotch + 0.07
 /** Altura del hombro donde termina el torso y empieza el canesú (a los costados). */
 const SHOULDER_Y = BODY.shoulder - 0.005
 /** Adelante el canesú arranca más abajo, para que el pecho suba derecho hasta la V. */
@@ -30,8 +31,8 @@ const HEM_THICKNESS = 0.0035
 // Contorno del torso: [altura, medio ancho, media profundidad]. Corte recto, apenas suelto.
 const TORSO_PROFILE: [number, number, number][] = [
   [HEM_Y, 0.214, 0.143],
-  [0.88, 0.211, 0.14],
-  [0.97, 0.205, 0.136],
+  [0.93, 0.211, 0.14],
+  [0.985, 0.206, 0.137],
   [BODY.waist, 0.201, 0.134],
   [1.15, 0.205, 0.138],
   [1.25, 0.211, 0.143],

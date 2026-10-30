@@ -12,5 +12,6 @@ describe('BODY', () => {
 
   it('las piernas caben dentro de la cadera', () => {
     expect(BODY.legSpacing).toBeLessThan(BODY.hipHalfWidth)
+    expect(BODY.legSpacing).toBeCloseTo(0.115, 5)
   })
 })
