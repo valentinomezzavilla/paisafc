@@ -4,7 +4,7 @@ import { Environment, Lightformer } from '@react-three/drei'
  * Luz de estudio de producto: caja de luz grande arriba, dos rebotes laterales y un contraluz, más una
  * luz clave con sombra. Todo armado acá (sin HDRI que bajar de la red).
  */
-export function StudioLights({ shadows = true }: { shadows?: boolean }) {
+export function StudioLights({ shadows = true, shadowSpan = 1 }: { shadows?: boolean; shadowSpan?: number }) {
   return (
     <>
       <ambientLight intensity={0.2} />
@@ -15,8 +15,8 @@ export function StudioLights({ shadows = true }: { shadows?: boolean }) {
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
         shadow-normalBias={0.02}
-        shadow-camera-left={-1}
-        shadow-camera-right={1}
+        shadow-camera-left={-shadowSpan}
+        shadow-camera-right={shadowSpan}
         shadow-camera-top={2}
         shadow-camera-bottom={-0.2}
       />

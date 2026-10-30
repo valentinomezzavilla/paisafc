@@ -1,8 +1,8 @@
-import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { DEFAULT_KIT, getKit, KITS, type KitId } from '../../data/kits'
 import { kitsSection } from '../../data/texts'
-import { useIdleReady } from '../../hooks/useIdleReady'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
+import { useViewerGate } from '../../hooks/useViewerGate'
 import { gsap, MOTION } from '../../lib/gsap'
 import type { AnchorId } from '../../three/anchors'
 import type { KitView } from '../../three/KitModel'
@@ -19,15 +19,6 @@ const KitViewer = lazy(() => import('./viewer/KitViewer'))
 /** Ancho que ocupa la tarjeta del detalle en desktop; el modelo se corre la mitad para dejarle lugar. */
 const CARD_W = 288
 
-function supportsWebGL() {
-  try {
-    const c = document.createElement('canvas')
-    return Boolean(c.getContext('webgl2') ?? c.getContext('webgl'))
-  } catch {
-    return false
-  }
-}
-
 export function KitSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -43,24 +34,14 @@ export function KitSection() {
   const [viewerFailed, setViewerFailed] = useState(false)
   const [hint, setHint] = useState(true)
   const isDesktop = useMediaQuery('(min-width: 768px)')
-  const idle = useIdleReady()
 
   const kit = getKit(activeId)
   const hotspots = kit.hotspots.filter((h) => view === 'full' || h.id !== 'shortEscudo')
   const activeIndex = hotspots.findIndex((h) => h.id === activeHotspot)
 
   // El visor se monta cuando el navegador queda libre y la sección está a menos de una pantalla.
-  const [near, setNear] = useState(false)
-  const [webgl, setWebgl] = useState(true)
-  useEffect(() => {
-    const el = sectionRef.current
-    if (!el) return
-    const io = new IntersectionObserver(([e]) => e.isIntersecting && setNear(true), { rootMargin: '100% 0px' })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
-  useEffect(() => setWebgl(supportsWebGL()), [])
-  const mountViewer = idle && near && webgl && !viewerFailed
+  const { ready: gateOpen, webgl } = useViewerGate(sectionRef)
+  const mountViewer = gateOpen && !viewerFailed
   const showPoster = !viewerReady || viewerFailed || !webgl
 
   // ------------------------------------------------------------ cambio de kit (wipe del fondo)

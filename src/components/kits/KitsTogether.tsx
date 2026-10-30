@@ -1,48 +1,47 @@
-import { useRef } from 'react'
+import { lazy, Suspense, useCallback, useRef, useState } from 'react'
 import { KITS } from '../../data/kits'
 import { kitsSection } from '../../data/texts'
-import { useIdleReady } from '../../hooks/useIdleReady'
+import { useViewerGate } from '../../hooks/useViewerGate'
 import { gsap, MOTION, useGSAP } from '../../lib/gsap'
-import { KitPicture } from '../ui/KitPicture'
 import { Topo } from '../ui/Topo'
 import { kitVars } from './KitBackdrop'
+import { KitPoster } from './KitPoster'
+import { ViewerBoundary } from './viewer/ViewerBoundary'
+
+// Comparte chunk con el visor de #camisetas: three se baja una sola vez.
+const TogetherStage = lazy(() => import('./viewer/TogetherStage'))
 
 /** Cierre de la sección: titular y suplente lado a lado, cada una sobre su color. */
 export function KitsTogether() {
   const root = useRef<HTMLElement>(null)
-  const ready = useIdleReady()
+  const progress = useRef(1)
+  const [failed, setFailed] = useState(false)
+  const [ready, setReady] = useState(false)
+  const gate = useViewerGate(root)
+  const mount = gate.ready && !failed
+  const onReady = useCallback(() => setReady(true), [])
+  const onError = useCallback(() => setFailed(true), [])
 
+  // Con el scroll, las camisetas giran de costado hacia el centro. Sin animación, quedan ya giradas.
   useGSAP(
     () => {
-      if (!ready) return // las fotos se montan cuando el navegador queda libre
-      const q = gsap.utils.selector(root)
       const mm = gsap.matchMedia()
       mm.add(MOTION.full, () => {
-        q('[data-half]').forEach((half, i) => {
-          const dir = i % 2 === 0 ? -1 : 1
-          gsap.from(half.querySelector('[data-shirt-back]'), {
-            xPercent: -30 * dir,
-            rotate: -8 * dir,
-            opacity: 0,
-            scrollTrigger: { trigger: root.current, start: 'top 75%', end: 'center center', scrub: 0.8 },
-          })
-          gsap.from(half.querySelector('[data-shirt-front]'), {
-            yPercent: 18,
-            opacity: 0,
-            scrollTrigger: { trigger: root.current, start: 'top 80%', end: 'center 60%', scrub: 0.8 },
-          })
+        progress.current = 0
+        gsap.to(progress, {
+          current: 1,
+          ease: 'none',
+          scrollTrigger: { trigger: root.current, start: 'top 80%', end: 'center center', scrub: 0.8 },
         })
-      })
-      mm.add(MOTION.reduced, () => {
-        gsap.from(q('[data-half]'), {
-          opacity: 0,
-          duration: 0.6,
-          scrollTrigger: { trigger: root.current, start: 'top 70%' },
-        })
+        return () => {
+          progress.current = 1
+        }
       })
     },
-    { scope: root, dependencies: [ready] },
+    { scope: root },
   )
+
+  const showPoster = !ready || failed || !gate.webgl
 
   return (
     <section ref={root} aria-labelledby="juntas-title" className="relative overflow-hidden">
@@ -65,40 +64,20 @@ export function KitsTogether() {
           <div
             key={kit.id}
             data-half
-            className="relative flex min-h-[78svh] flex-col items-center justify-end overflow-hidden px-2 pt-40 pb-12 text-(--kit-ink) sm:min-h-svh sm:px-6 sm:pt-48 sm:pb-16"
+            className="relative min-h-[78svh] overflow-hidden text-(--kit-ink) sm:min-h-svh"
             style={{
               ...kitVars(kit),
               background: 'radial-gradient(90% 70% at 50% 45%, var(--kit-bg) 40%, var(--kit-bg-deep))',
             }}
           >
             <Topo tone={kit.theme.topo.tone} opacity={kit.theme.topo.opacity} parallax={10} />
+            {/* Póster hasta que el 3D está dibujado (y si no hay WebGL) */}
             <div
-              className="relative w-[min(40vw,42svh*0.72,420px)]"
-              style={{ aspectRatio: `${kit.pieces.front.width} / ${kit.pieces.front.height}` }}
+              className={`pointer-events-none absolute inset-x-0 top-[24%] flex h-[52%] justify-center transition-opacity duration-700 ${showPoster ? 'opacity-100' : 'opacity-0'}`}
             >
-              {ready && (
-                <>
-                  <KitPicture
-                    data-shirt-back
-                    piece={kit.pieces.back}
-                    alt=""
-                    aria-hidden
-                    loading="lazy"
-                    sizes="(min-width: 768px) 360px, 36vw"
-                    className="absolute top-[-6%] left-[18%] w-[92%] opacity-60 brightness-90"
-                  />
-                  <KitPicture
-                    data-shirt-front
-                    piece={kit.pieces.front}
-                    alt={`Camiseta ${kit.roleLabel.toLowerCase()} de Paisa FC (${kit.colorName.toLowerCase()}) de frente`}
-                    loading="lazy"
-                    sizes="(min-width: 768px) 420px, 40vw"
-                    className="relative h-auto w-full drop-shadow-[0_30px_40px_rgb(0_0_0/0.35)]"
-                  />
-                </>
-              )}
+              <KitPoster kit={kit} view="full" loading="lazy" className="h-full w-auto max-w-full" />
             </div>
-            <div className="relative mt-6 text-center">
+            <div className="absolute inset-x-0 bottom-0 pb-12 text-center sm:pb-16">
               <h3
                 className="font-display text-3xl leading-none font-extrabold sm:text-5xl lg:text-6xl"
                 style={{ fontVariationSettings: '"SOFT" 60' }}
@@ -112,6 +91,14 @@ export function KitsTogether() {
           </div>
         ))}
       </div>
+
+      {mount && (
+        <ViewerBoundary onError={onError}>
+          <Suspense fallback={null}>
+            <TogetherStage progress={progress} onReady={onReady} onError={onError} />
+          </Suspense>
+        </ViewerBoundary>
+      )}
     </section>
   )
 }

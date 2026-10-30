@@ -9,7 +9,7 @@ export const POSTER_SIZE: Record<KitView, [number, number]> = { shirt: [900, 100
  * Render fijo del modelo 3D: se ve en el HTML prerenderizado y mientras carga el visor, y queda si el
  * navegador no tiene WebGL.
  */
-export function KitPoster({ kit, view, className = '' }: { kit: Kit; view: KitView; className?: string }) {
+export function KitPoster({ kit, view, className = '', loading }: { kit: Kit; view: KitView; className?: string; loading?: 'lazy' | 'eager' }) {
   const [w, h] = POSTER_SIZE[view]
   const src = `assets/kits/3d/posters/${kit.id}-${view}`
   return (
@@ -21,6 +21,7 @@ export function KitPoster({ kit, view, className = '' }: { kit: Kit; view: KitVi
       height={h}
       alt={`${view === 'full' ? 'Conjunto' : 'Camiseta'} ${kit.roleLabel.toLowerCase()} de Paisa FC (${kit.colorName.toLowerCase()})`}
       decoding="async"
+      loading={loading}
       draggable={false}
       className={`object-contain ${className}`}
     />

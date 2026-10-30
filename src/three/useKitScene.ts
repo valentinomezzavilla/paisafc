@@ -25,8 +25,16 @@ export interface KitTextures {
   decals: Record<DecalId, THREE.CanvasTexture>
 }
 
+const texturePromises = new Map<KitId, Promise<KitTextures>>()
+
+/** Texturas de un kit, dibujadas una sola vez por página (las comparten los dos visores). */
 export function loadKitTextures(kit: KitId): Promise<KitTextures> {
-  return Promise.all([topoTexture(kit), decalTextures(kit)]).then(([topo, decals]) => ({ topo, decals }))
+  let p = texturePromises.get(kit)
+  if (!p) {
+    p = Promise.all([topoTexture(kit), decalTextures(kit)]).then(([topo, decals]) => ({ topo, decals }))
+    texturePromises.set(kit, p)
+  }
+  return p
 }
 
 export interface KitAssets {
