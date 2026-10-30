@@ -98,6 +98,33 @@ export function superellipse(
   })
 }
 
+/**
+ * Anillo elíptico perpendicular a `axis` (la dirección de avance del tubo). Usa una base con la misma
+ * orientación que `superellipse` sobre +y, así un loft de estos anillos también tiene normales hacia afuera.
+ * `front` marca hacia dónde cae el punto 0.
+ */
+export function tubeRing(
+  center: THREE.Vector3,
+  axis: THREE.Vector3,
+  rx: number,
+  rz: number,
+  segments: number,
+  front = new THREE.Vector3(0, 0, 1),
+  offset: (t: number) => number = () => 0,
+): Ring {
+  const a = axis.clone().normalize()
+  const zb = front.clone().sub(a.clone().multiplyScalar(front.dot(a))).normalize()
+  const xb = new THREE.Vector3().crossVectors(a, zb)
+  return Array.from({ length: segments }, (_, j) => {
+    const t = (j / segments) * Math.PI * 2
+    const d = offset(t)
+    return center
+      .clone()
+      .addScaledVector(xb, (rx + d) * Math.sin(t))
+      .addScaledVector(zb, (rz + d) * Math.cos(t))
+  })
+}
+
 /** Fracción de normales que apuntan hacia afuera de `center(p)`. Lo usan los tests. */
 export function outwardNormalRatio(geo: THREE.BufferGeometry, center: (p: THREE.Vector3) => THREE.Vector3): number {
   const pos = geo.getAttribute('position')

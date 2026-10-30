@@ -1,0 +1,46 @@
+import { describe, expect, it } from 'vitest'
+import { BODY } from '../body'
+import { buildShirt, SLEEVE_SEGMENTS } from '../garments/shirt'
+import { hasNaN, outwardNormalRatio } from '../loft'
+import { bbox, firstRingCenter, halfWidthAt, yAxis } from './helpers'
+
+const shirt = buildShirt()
+
+describe('buildShirt', () => {
+  it('ninguna parte tiene NaN', () => {
+    for (const [name, geo] of Object.entries(shirt)) {
+      if (typeof geo === 'number') continue
+      expect(hasNaN(geo), name).toBe(false)
+    }
+  })
+
+  it('las normales del torso apuntan hacia afuera', () => {
+    expect(outwardNormalRatio(shirt.body, yAxis)).toBeGreaterThan(0.95)
+  })
+
+  it('el torso va del ruedo al cuello', () => {
+    const box = bbox(shirt.body)
+    expect(box.min.y).toBeCloseTo(shirt.hemY, 3)
+    expect(shirt.hemY).toBeCloseTo(BODY.crotch + 0.01, 5)
+    expect(box.max.y).toBeGreaterThanOrEqual(BODY.neckBase - 0.02)
+  })
+
+  it('la raíz de cada manga queda dentro del torso', () => {
+    for (const sleeve of [shirt.sleeveL, shirt.sleeveR]) {
+      const c = firstRingCenter(sleeve, SLEEVE_SEGMENTS + 1)
+      expect(Math.abs(c.x)).toBeLessThan(halfWidthAt(shirt.body, c.y, 0.015))
+    }
+  })
+
+  it('las mangas son espejo una de la otra', () => {
+    const l = bbox(shirt.sleeveL)
+    const r = bbox(shirt.sleeveR)
+    expect(l.min.x).toBeCloseTo(-r.max.x, 3)
+    expect(l.max.x).toBeCloseTo(-r.min.x, 3)
+    expect(l.min.y).toBeCloseTo(r.min.y, 3)
+  })
+
+  it('el cuello no baja del pecho', () => {
+    expect(bbox(shirt.collar).min.y).toBeGreaterThanOrEqual(BODY.chest + 0.08)
+  })
+})
