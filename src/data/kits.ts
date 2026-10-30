@@ -100,9 +100,9 @@ const KIT_LIST: KitData[] = [
       { id: 'textura', x: 44, y: 74, title: 'Curvas de nivel', text: 'Textura topográfica en toda la tela, como un mapa del pago.' },
     ],
     backHotspots: [
-      { id: 'nombre', x: 50, y: 21, title: 'MEZZAVILLA', text: 'Nombre en la espalda, en dorado.' },
+      { id: 'nombre', x: 50, y: 12, title: 'MEZZAVILLA', text: 'Nombre en la espalda, en dorado.' },
       { id: 'numero', x: 50, y: 42, title: 'El 11', text: 'Número grande con contorno.' },
-      { id: 'sponsor', x: 50, y: 77, title: 'Tom’s Burger', text: 'Sponsor trasero en letra script retro.' },
+      { id: 'sponsor', x: 50, y: 63, title: 'Tom’s Burger', text: 'Sponsor trasero en letra script retro.' },
     ],
   },
   {
@@ -132,9 +132,9 @@ const KIT_LIST: KitData[] = [
       { id: 'textura', x: 40, y: 72, title: 'Textura', text: 'Curvas de nivel apenas marcadas en la tela.' },
     ],
     backHotspots: [
-      { id: 'nombre', x: 50, y: 21, title: 'MEZZAVILLA', text: 'Nombre en la espalda, en verde.' },
+      { id: 'nombre', x: 50, y: 12, title: 'MEZZAVILLA', text: 'Nombre en la espalda, en verde.' },
       { id: 'numero', x: 51, y: 44, title: 'El 11', text: 'Número grande con contorno.' },
-      { id: 'sponsor', x: 51, y: 77, title: 'Tom’s Burger', text: 'Sponsor trasero en letra script retro.' },
+      { id: 'sponsor', x: 51, y: 66, title: 'Tom’s Burger', text: 'Sponsor trasero en letra script retro.' },
     ],
   },
 ]

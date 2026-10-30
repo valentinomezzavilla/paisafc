@@ -15,7 +15,7 @@ export function Nav() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-[background-color,backdrop-filter,box-shadow] duration-500 ${
-        scrolled ? 'bg-night/70 shadow-[0_1px_0_rgb(205_187_139/0.15)] backdrop-blur-md' : ''
+        scrolled ? 'bg-night/90 shadow-[0_1px_0_rgb(205_187_139/0.15)] backdrop-blur-md' : ''
       }`}
     >
       <nav aria-label="Principal" className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
