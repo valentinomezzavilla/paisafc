@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { BODY } from '../body'
 import { buildShirt, SLEEVE_SEGMENTS } from '../garments/shirt'
 import { hasNaN, outwardNormalRatio } from '../loft'
-import { bbox, firstRingCenter, halfWidthAt, yAxis } from './helpers'
+import { bbox, firstRingCenter, halfWidthAt, sideExtentAt, yAxis } from './helpers'
 
 const shirt = buildShirt()
 
@@ -42,5 +42,22 @@ describe('buildShirt', () => {
 
   it('el cuello no baja del pecho', () => {
     expect(bbox(shirt.collar).min.y).toBeGreaterThanOrEqual(BODY.chest + 0.08)
+  })
+
+  it('el torso es simétrico: los pliegues no cambian de un lado al otro', () => {
+    for (const y of [0.95, 1.1, 1.2, 1.26, 1.32]) {
+      expect(sideExtentAt(shirt.body, y, 1), `y = ${y}`).toBeCloseTo(sideExtentAt(shirt.body, y, -1), 3)
+    }
+  })
+
+  it('el dobladillo de cada puño queda afuera del torso', () => {
+    for (const [sleeve, sign] of [[shirt.sleeveL, -1], [shirt.sleeveR, 1]] as const) {
+      const pos = sleeve.getAttribute('position')
+      const hemStart = pos.count - 3 * (SLEEVE_SEGMENTS + 1)
+      for (let i = hemStart; i < pos.count; i++) {
+        const y = pos.getY(i)
+        expect(sign * pos.getX(i)).toBeGreaterThan(sideExtentAt(shirt.body, y, sign, 0.004) - 0.0005)
+      }
+    }
   })
 })

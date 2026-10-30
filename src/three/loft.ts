@@ -7,25 +7,32 @@ interface LoftOptions {
   /** true (default): cada anillo es un contorno cerrado. false: tira abierta. */
   closed?: boolean
   uvScale?: [number, number]
+  /**
+   * 'center' (default): v = distancia acumulada entre centros de anillo.
+   * 'arc': v = largo acumulado por cada columna; no estira la trama donde los anillos se achican.
+   */
+  v?: 'center' | 'arc'
 }
 
 /**
- * Une anillos consecutivos en una malla. u = largo de arco / perímetro del anillo; v = distancia
- * acumulada entre centros de anillo, en metros. Con anillos antihorarios (vistos desde la punta de
+ * Une anillos consecutivos en una malla. u = largo de arco / perímetro del anillo; v en metros (ver
+ * `LoftOptions.v`). Con anillos antihorarios (vistos desde la punta de
  * avance) las normales salen hacia afuera.
  */
-export function loft(rings: Ring[], { closed = true, uvScale = [1, 1] }: LoftOptions = {}): THREE.BufferGeometry {
+export function loft(rings: Ring[], { closed = true, uvScale = [1, 1], v: vMode = 'center' }: LoftOptions = {}): THREE.BufferGeometry {
   const n = rings[0].length
   const cols = closed ? n + 1 : n
   const positions = new Float32Array(rings.length * cols * 3)
   const uvs = new Float32Array(rings.length * cols * 2)
 
   let v = 0
+  const columnV = new Float64Array(n)
   let prevCenter: THREE.Vector3 | null = null
   rings.forEach((ring, i) => {
     const center = ring.reduce((c, p) => c.add(p), new THREE.Vector3()).divideScalar(n)
     if (prevCenter) v += center.distanceTo(prevCenter)
     prevCenter = center
+    if (i > 0) for (let j = 0; j < n; j++) columnV[j] += ring[j].distanceTo(rings[i - 1][j])
 
     const arcs = [0]
     for (let j = 1; j < cols; j++) arcs.push(arcs[j - 1] + ring[j % n].distanceTo(ring[j - 1]))
@@ -35,7 +42,7 @@ export function loft(rings: Ring[], { closed = true, uvScale = [1, 1] }: LoftOpt
       const p = ring[j % n]
       const k = i * cols + j
       positions.set([p.x, p.y, p.z], k * 3)
-      uvs.set([(arcs[j] / total) * uvScale[0], v * uvScale[1]], k * 2)
+      uvs.set([(arcs[j] / total) * uvScale[0], (vMode === 'arc' ? columnV[j % n] : v) * uvScale[1]], k * 2)
     }
   })
 

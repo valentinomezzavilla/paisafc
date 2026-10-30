@@ -62,5 +62,5 @@ export function buildSock(side: 'L' | 'R'): SockParts {
   ]
 
   const flip = (list: Ring[]) => (side === 'L' ? list.map(mirrorX) : list)
-  return { sock: loft(flip(rings)), cuff: loft(flip(cuff)), topY: TOP_Y }
+  return { sock: loft(flip(rings), { v: 'arc' }), cuff: loft(flip(cuff)), topY: TOP_Y }
 }

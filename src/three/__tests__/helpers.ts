@@ -30,3 +30,11 @@ export function halfDepthAt(geo: THREE.BufferGeometry, y: number, tol = 0.01, cz
   for (let i = 0; i < pos.count; i++) if (Math.abs(pos.getY(i) - y) < tol) d = Math.max(d, Math.abs(pos.getZ(i) - cz))
   return d
 }
+
+/** Mayor alcance hacia un lado (sign = 1: +x, -1: -x) de los vértices a ±tol de la altura y. */
+export function sideExtentAt(geo: THREE.BufferGeometry, y: number, sign: 1 | -1, tol = 0.006): number {
+  const pos = geo.getAttribute('position')
+  let w = 0
+  for (let i = 0; i < pos.count; i++) if (Math.abs(pos.getY(i) - y) < tol) w = Math.max(w, sign * pos.getX(i))
+  return w
+}

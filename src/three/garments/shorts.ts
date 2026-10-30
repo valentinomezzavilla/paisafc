@@ -110,8 +110,8 @@ export function buildShorts(): ShortsParts {
   const band = [TOP_Y - 0.035, TOP_Y - 0.001].map((y) => superellipse(0, y, 0, 0.176, 0.12, 2.3, 96))
 
   return {
-    legL: loft(left),
-    legR: loft(right),
+    legL: loft(left, { v: 'arc' }),
+    legR: loft(right, { v: 'arc' }),
     waistband: loft(band),
     // mirrorX invierte el orden de los puntos: el costado externo de la izquierda es SEGMENTS - OUTER / 2
     stripeL: stripe(left, SEGMENTS - OUTER / 2),

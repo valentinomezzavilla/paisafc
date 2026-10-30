@@ -51,19 +51,22 @@ const SLEEVE_EMBED = 0.03
 
 const smooth = THREE.MathUtils.smoothstep
 
-/** Pliegues de la tela del torso: desplazamiento radial en metros. */
+/**
+ * Pliegues de la tela del torso: desplazamiento radial en metros. Solo términos pares en t (cos, |sin|),
+ * así los dos costados quedan iguales.
+ */
 function torsoFolds(t: number, y: number): number {
   const fadeHem = smooth(y, HEM_Y, HEM_Y + 0.05)
   const fadeTop = 1 - smooth(y, 1.36, SHOULDER_Y)
   const side = Math.abs(Math.sin(t)) ** 5
   // Caída general, de baja frecuencia
-  const drape = 0.0022 * Math.sin(5 * t + 7 * y) * Math.sin(3 * t - 4 * y + 1.3) + 0.0012 * Math.sin(11 * t + 17 * y)
+  const drape = 0.0022 * Math.cos(5 * t) * Math.sin(7 * y + 0.6) + 0.0012 * Math.cos(11 * t) * Math.sin(17 * y)
   // Arrugas en abanico que bajan desde la axila
   const armpit = 0.0045 * side * smooth(y, 1.12, 1.24) * (1 - smooth(y, 1.27, 1.33)) * Math.sin(55 * (y + 0.04 * Math.cos(t)))
   // Ondas suaves sobre la cintura, a los costados
   const waist = 0.003 * side * smooth(y, 0.9, 0.97) * (1 - smooth(y, 1.05, 1.12)) * Math.sin(42 * y + 1.1)
   // Vuelo del ruedo
-  const hem = 0.0035 * (1 - smooth(y, HEM_Y, HEM_Y + 0.12)) * Math.sin(6 * t + 0.4)
+  const hem = 0.0035 * (1 - smooth(y, HEM_Y, HEM_Y + 0.12)) * Math.cos(6 * t)
   return (drape + armpit + waist) * fadeHem * fadeTop + hem
 }
 
@@ -164,11 +167,11 @@ function buildSleeve(sign: 1 | -1): { sleeve: THREE.BufferGeometry; trim: THREE.
   // Dos franjas finas cerca del puño
   const stripe = (s0: number, w: number) => loft([ring(s0, 0.0011), ring(s0 + w, 0.0011)])
   const trim = mergeGeometries([stripe(SLEEVE_LENGTH - 0.03, 0.006), stripe(SLEEVE_LENGTH - 0.017, 0.006)])
-  return { sleeve: loft(rings), trim }
+  return { sleeve: loft(rings, { v: 'arc' }), trim }
 }
 
 export function buildShirt(): ShirtParts {
-  const body = loft(torsoRings())
+  const body = loft(torsoRings(), { v: 'arc' })
   const right = buildSleeve(1)
   const left = buildSleeve(-1)
   const { collar, trim } = buildCollar(body)

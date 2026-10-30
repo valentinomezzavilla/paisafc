@@ -43,3 +43,14 @@ describe('loft', () => {
     expect(uv.getX(16)).toBeCloseTo(1)
   })
 })
+
+describe("loft con v: 'arc'", () => {
+  it('v mide el largo real de cada columna aunque los anillos se achiquen', () => {
+    const rings = [superellipse(0, 0, 0, 0.2, 0.2, 2, 8), superellipse(0, 0.1, 0, 0.05, 0.05, 2, 8)]
+    const geo = loft(rings, { v: 'arc' })
+    const uv = geo.getAttribute('uv')
+    const expected = rings[0][0].distanceTo(rings[1][0])
+    expect(uv.getY(9)).toBeCloseTo(expected, 5)
+    expect(uv.getY(9)).toBeGreaterThan(0.1)
+  })
+})
