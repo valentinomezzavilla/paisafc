@@ -63,14 +63,17 @@ export function CrestSection() {
       aria-labelledby="escudo-title"
       className="relative isolate overflow-hidden bg-night px-4 py-24 sm:px-8 md:py-32"
     >
-      <Topo color="color-mix(in oklab, var(--color-gold) 10%, transparent)" parallax={14} className="-z-10" />
+      <Topo opacity={0.1} parallax={14} className="-z-10" />
 
       <div className="mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-[1.1fr_1fr] md:gap-16">
         <div className="relative mx-auto w-full max-w-[520px]" style={spot}>
           <div
             aria-hidden
             className="absolute inset-[8%] -z-10 rounded-full blur-3xl"
-            style={{ background: 'radial-gradient(closest-side, color-mix(in oklab, var(--color-crest-gold) 30%, transparent), transparent)' }}
+            style={{
+              background:
+                'radial-gradient(closest-side, color-mix(in oklab, var(--color-crest-gold) 30%, transparent), transparent)',
+            }}
           />
           <div data-crest-big className="relative">
             <CrestImage
@@ -100,7 +103,9 @@ export function CrestSection() {
                 aria-pressed={activeId === part.id}
                 aria-label={`${pad(i + 1)}. ${part.title}`}
                 className={`absolute grid size-8 -translate-1/2 place-items-center rounded-full font-jersey text-xs font-extrabold ring-2 ring-crest-gold transition-colors duration-300 sm:size-9 sm:text-sm ${
-                  activeId === part.id ? 'bg-crest-gold text-forest-deep' : 'bg-night/75 text-cream backdrop-blur-sm hover:bg-forest'
+                  activeId === part.id
+                    ? 'bg-crest-gold text-forest-deep'
+                    : 'bg-night/75 text-cream backdrop-blur-sm hover:bg-forest'
                 }`}
                 style={{ left: `${part.x}%`, top: `${part.y}%` }}
               >
@@ -145,7 +150,9 @@ export function CrestSection() {
                     aria-controls={`parte-${part.id}`}
                     className="group flex w-full items-baseline gap-4 py-4 text-left"
                   >
-                    <span className={`font-jersey text-sm font-extrabold transition-colors ${isActive ? 'text-crest-gold' : 'text-gold/60'}`}>
+                    <span
+                      className={`font-jersey text-sm font-extrabold transition-colors ${isActive ? 'text-crest-gold' : 'text-gold/60'}`}
+                    >
                       {pad(i + 1)}
                     </span>
                     <span className="flex-1">

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type PointerEvent } from 'react'
 import { DEFAULT_KIT, getKit, KITS, type KitId } from '../../data/kits'
 import { kitsSection } from '../../data/texts'
+import { useIdleReady } from '../../hooks/useIdleReady'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { gsap, MOTION, ScrollTrigger, useGSAP } from '../../lib/gsap'
 import { scrollToY } from '../../lib/scroll'
@@ -32,6 +33,7 @@ export function KitSection() {
   const [activeHotspot, setActiveHotspot] = useState<string | null>(null)
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)')
+  const assetsReady = useIdleReady()
 
   const activeKit = getKit(activeId)
   const activeKitRef = useRef(activeKit)
@@ -51,11 +53,14 @@ export function KitSection() {
 
         // 1. Entra la camiseta de frente
         tl.addLabel('enter')
-        tl.fromTo(
-          front,
-          reduced ? { opacity: 0 } : { opacity: 0, yPercent: 16, rotateY: -32, scale: 0.84 },
-          { opacity: 1, yPercent: 0, rotateY: 0, scale: 1, duration: 1, ease: 'power3.out' },
-        )
+        tl.fromTo(front, reduced ? { opacity: 0 } : { opacity: 0, yPercent: 16, rotateY: -32, scale: 0.84 }, {
+          opacity: 1,
+          yPercent: 0,
+          rotateY: 0,
+          scale: 1,
+          duration: 1,
+          ease: 'power3.out',
+        })
         tl.from(q('[data-kit-head]'), { opacity: 0, y: reduced ? 0 : 40, duration: 0.7, ease: 'power2.out' }, 0.1)
 
         // 2. Hotspots del frente, uno por uno
@@ -119,7 +124,7 @@ export function KitSection() {
         tl.to({}, { duration: 0.8 })
 
         // El 11 gigante del fondo se mueve más lento que la prenda
-        if (!reduced) tl.fromTo(q('[data-big-number]'), { y: '6svh' }, { y: '-6svh', duration: tl.duration() }, 0)
+        if (!reduced) tl.fromTo(q('[data-big-number]'), { yPercent: 7 }, { yPercent: -7, duration: tl.duration() }, 0)
 
         const st = ScrollTrigger.create({
           animation: tl,
@@ -275,6 +280,7 @@ export function KitSection() {
             step={step}
             activeHotspot={activeHotspot}
             isDesktop={isDesktop}
+            assetsReady={assetsReady}
             onToggleHotspot={toggleHotspot}
           />
         ))}

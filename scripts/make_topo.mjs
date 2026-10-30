@@ -1,7 +1,8 @@
-// Genera public/assets/topo.svg: curvas de nivel (estilo mapa topográfico) a partir de ruido.
-// El SVG se usa como máscara CSS, así que el color lo pone cada kit.
+// Genera public/assets/topo-{gold,forest}.svg: curvas de nivel (estilo mapa topográfico) a partir
+// de ruido, en los colores de la paleta (src/styles/palette.css). Se usan como imagen de fondo:
+// el navegador las rasteriza una vez y el parallax solo mueve la capa.
 //   node scripts/make_topo.mjs [semilla]
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const seed = Number(process.argv[2] ?? 11)
 const W = 1600
@@ -131,6 +132,10 @@ for (let l = 1; l < LEVELS; l++) {
   }
 }
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><path d="${paths.join('')}" fill="none" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/></svg>`
-writeFileSync(new URL('../public/assets/topo.svg', import.meta.url), svg)
-console.log(`topo.svg: ${paths.length} curvas, ${(svg.length / 1024).toFixed(1)} KB`)
+const palette = readFileSync(new URL('../src/styles/palette.css', import.meta.url), 'utf8')
+const color = (name) => palette.match(new RegExp(`--color-${name}: (#[0-9a-f]{6})`))[1]
+for (const tone of ['gold', 'forest']) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><path d="${paths.join('')}" fill="none" stroke="${color(tone)}" stroke-width="1.4" stroke-linejoin="round"/></svg>`
+  writeFileSync(new URL(`../public/assets/topo-${tone}.svg`, import.meta.url), svg)
+  console.log(`topo-${tone}.svg: ${paths.length} curvas, ${(svg.length / 1024).toFixed(1)} KB`)
+}

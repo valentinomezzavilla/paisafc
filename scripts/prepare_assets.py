@@ -182,7 +182,19 @@ def build_crest(use_esrgan: bool) -> Image.Image:
         rgba.putalpha(a)
     folder = OUT / "escudo"
     export(rgba, folder, "escudo", 512)
+    icon = rgba.copy()
+    icon.thumbnail((96, 110), Image.LANCZOS)
+    icon.save(folder / "escudo-96.webp", quality=90, method=6)
     return rgba
+
+
+def build_grain() -> None:
+    """Baldosa de grano (ruido en alfa) para la textura de papel de todo el sitio."""
+    rng = np.random.default_rng(3)
+    noise = rng.normal(0.5, 0.22, (96, 96)).clip(0, 1)
+    tile = np.zeros((96, 96, 4), np.uint8)
+    tile[..., 3] = np.uint8(noise * 255)
+    Image.fromarray(tile, "RGBA").save(OUT / "grain.png", optimize=True)
 
 
 def build_icons(crest: Image.Image) -> None:
@@ -289,6 +301,7 @@ def main() -> None:
     build_og(crest, forest)
     print("Sponsors")
     build_sponsor_marks()
+    build_grain()
 
 
 if __name__ == "__main__":

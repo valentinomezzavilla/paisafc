@@ -32,8 +32,12 @@ export function KitSwitcher({ kits, activeId, onSelect }: KitSwitcherProps) {
               style={{ background: kit.theme.bg }}
             />
             <span className="leading-none">
-              <span className="block font-jersey text-base font-extrabold tracking-wide uppercase">{kit.roleLabel}</span>
-              <span className={`block text-[11px] ${active ? 'opacity-80' : 'text-(--kit-muted)'}`}>{kit.colorName}</span>
+              <span className="block font-jersey text-base font-extrabold tracking-wide uppercase">
+                {kit.roleLabel}
+              </span>
+              <span className={`block text-[11px] ${active ? 'opacity-80' : 'text-(--kit-muted)'}`}>
+                {kit.colorName}
+              </span>
             </span>
           </button>
         )

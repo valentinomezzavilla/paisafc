@@ -53,8 +53,8 @@
   inset: 0;
   z-index: 60;
   pointer-events: none;
-  opacity: 0.07;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  background: url('/assets/grain.png') repeat;
 }
 
 @keyframes hotspot-pulse {
@@ -91,4 +91,46 @@
   syntax: '<percentage>';
   inherits: true;
   initial-value: 100%;
+}
+
+/*
+ * Revelado del escudo del hero en CSS puro: arranca apenas carga la página, sin esperar al JS
+ * (es el elemento más grande de la primera pantalla). Los textos del hero los anima GSAP;
+ * se ocultan solo si hay JS y, por las dudas, aparecen solos a los 4 s.
+ */
+@keyframes crest-in {
+  from {
+    opacity: 0;
+    transform: translateY(6%) scale(1.1);
+    filter: blur(12px) brightness(1.6);
+  }
+}
+@keyframes glow-in {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+@keyframes failsafe-show {
+  to {
+    visibility: visible;
+  }
+}
+.hero-crest {
+  animation: crest-in 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+.hero-glow {
+  animation: glow-in 2.4s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+.js [data-hero-text] {
+  visibility: hidden;
+  animation: failsafe-show 0s 4s forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-crest {
+    animation-name: none;
+  }
+  .hero-glow {
+    animation: none;
+  }
 }

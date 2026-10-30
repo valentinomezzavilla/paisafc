@@ -21,7 +21,10 @@ const only = flags.only ? flags.only.split(',') : Object.keys(viewports)
 
 const browser = await chromium.launch()
 for (const vp of only) {
-  const page = await browser.newPage({ ...viewports[vp], reducedMotion: 'reduced' in flags ? 'reduce' : 'no-preference' })
+  const page = await browser.newPage({
+    ...viewports[vp],
+    reducedMotion: 'reduced' in flags ? 'reduce' : 'no-preference',
+  })
   page.on('pageerror', (e) => console.log(`[${vp}] pageerror:`, e.message))
   page.on('console', (m) => m.type() === 'error' && console.log(`[${vp}] console:`, m.text()))
   await page.goto(url, { waitUntil: 'networkidle' })

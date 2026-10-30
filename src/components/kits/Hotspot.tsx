@@ -29,7 +29,9 @@ export function Hotspot({ hotspot, index, side, cardId, active, showCard, onTogg
         aria-label={`${pad(index + 1)}. ${hotspot.title}`}
         onClick={() => onToggle(hotspot.id)}
         className={`group relative grid size-9 place-items-center rounded-full font-jersey text-sm font-extrabold transition-[background-color,color,transform] duration-300 md:size-10 ${
-          active ? 'scale-110 bg-(--kit-accent) text-(--kit-on-accent)' : 'bg-(--kit-bg)/70 text-(--kit-ink) backdrop-blur-sm'
+          active
+            ? 'scale-110 bg-(--kit-accent) text-(--kit-on-accent)'
+            : 'bg-(--kit-bg)/70 text-(--kit-ink) backdrop-blur-sm'
         }`}
       >
         <span

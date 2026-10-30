@@ -2,16 +2,19 @@ import { useRef } from 'react'
 import { asset } from '../../lib/asset'
 import { gsap, MOTION, useGSAP } from '../../lib/gsap'
 
+export type TopoTone = 'gold' | 'forest'
+
 interface TopoProps {
-  /** Color de las líneas (acepta variables CSS). */
-  color?: string
+  /** Color de las líneas: cada tono es un SVG propio (scripts/make_topo.mjs). */
+  tone?: TopoTone
+  opacity?: number
   /** Desplazamiento vertical total con el scroll, en % de su alto. 0 = sin parallax. */
   parallax?: number
   className?: string
 }
 
-/** Curvas de nivel de fondo: el SVG es una máscara, el color lo define quien lo usa. */
-export function Topo({ color = 'var(--kit-topo)', parallax = 12, className = '' }: TopoProps) {
+/** Curvas de nivel de fondo, con parallax suave. */
+export function Topo({ tone = 'gold', opacity = 0.14, parallax = 12, className = '' }: TopoProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   useGSAP(() => {
@@ -30,13 +33,12 @@ export function Topo({ color = 'var(--kit-topo)', parallax = 12, className = '' 
     })
   })
 
-  const mask = `url(${asset('assets/topo.svg')}) center / cover no-repeat`
   return (
     <div
       ref={ref}
       aria-hidden
-      className={`pointer-events-none absolute -inset-y-[10%] inset-x-0 ${className}`}
-      style={{ background: color, mask, WebkitMask: mask }}
+      className={`pointer-events-none absolute -inset-y-[10%] inset-x-0 bg-cover bg-center will-change-transform ${className}`}
+      style={{ backgroundImage: `url(${asset(`assets/topo-${tone}.svg`)})`, opacity }}
     />
   )
 }

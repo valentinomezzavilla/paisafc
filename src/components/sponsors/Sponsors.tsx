@@ -13,11 +13,17 @@ const MARKS: Record<string, ComponentType<{ className?: string }>> = {
 /** Sponsors que aparecen en la camiseta, redes y footer. */
 export function Sponsors() {
   return (
-    <section id="contacto" aria-labelledby="sponsors-title" className="relative isolate overflow-hidden bg-forest-deep text-cream">
-      <Topo color="color-mix(in oklab, var(--color-gold) 9%, transparent)" parallax={10} className="-z-10" />
+    <section
+      id="contacto"
+      aria-labelledby="sponsors-title"
+      className="relative isolate overflow-hidden bg-forest-deep text-cream"
+    >
+      <Topo opacity={0.09} parallax={10} className="-z-10" />
 
       <div className="mx-auto max-w-6xl px-4 pt-24 pb-16 sm:px-8 md:pt-32">
-        <p className="font-jersey text-xs font-bold tracking-[0.35em] text-gold uppercase sm:text-sm">{sponsorsSection.eyebrow}</p>
+        <p className="font-jersey text-xs font-bold tracking-[0.35em] text-gold uppercase sm:text-sm">
+          {sponsorsSection.eyebrow}
+        </p>
         <h2
           id="sponsors-title"
           className="mt-2 font-display text-[clamp(2.4rem,6vw,4.5rem)] leading-[0.95] font-extrabold"
@@ -36,14 +42,21 @@ export function Sponsors() {
                 </span>
                 <span className="mt-4 flex items-baseline justify-between border-t border-gold/15 pt-3">
                   <span className="font-display text-lg font-bold">{s.name}</span>
-                  <span className="font-jersey text-xs font-bold tracking-[0.25em] text-cream/60 uppercase">{s.where}</span>
+                  <span className="font-jersey text-xs font-bold tracking-[0.25em] text-cream/60 uppercase">
+                    {s.where}
+                  </span>
                 </span>
               </>
             )
             return (
               <li key={s.id}>
                 {s.href ? (
-                  <a href={s.href} target="_blank" rel="noreferrer" className="group block rounded-3xl border border-gold/15 bg-night/40 p-6 transition-colors hover:border-gold/40">
+                  <a
+                    href={s.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group block rounded-3xl border border-gold/15 bg-night/40 p-6 transition-colors hover:border-gold/40"
+                  >
                     {body}
                   </a>
                 ) : (
@@ -56,8 +69,13 @@ export function Sponsors() {
 
         <div className="mt-24 flex flex-col items-start justify-between gap-8 border-t border-gold/15 pt-12 md:flex-row md:items-end">
           <div>
-            <p className="font-jersey text-xs font-bold tracking-[0.35em] text-gold uppercase sm:text-sm">{contact.eyebrow}</p>
-            <p className="mt-2 font-display text-4xl font-extrabold sm:text-5xl" style={{ fontVariationSettings: '"SOFT" 60' }}>
+            <p className="font-jersey text-xs font-bold tracking-[0.35em] text-gold uppercase sm:text-sm">
+              {contact.eyebrow}
+            </p>
+            <p
+              className="mt-2 font-display text-4xl font-extrabold sm:text-5xl"
+              style={{ fontVariationSettings: '"SOFT" 60' }}
+            >
               {contact.title}
             </p>
           </div>
@@ -80,7 +98,9 @@ export function Sponsors() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-6 text-sm text-cream/60 sm:px-8">
           <span className="flex items-center gap-3">
             <CrestImage alt="" sizes="32px" loading="lazy" className="h-8 w-auto" />
-            <span className="font-jersey text-base font-extrabold tracking-wide text-cream uppercase">{contact.footer}</span>
+            <span className="font-jersey text-base font-extrabold tracking-wide text-cream uppercase">
+              {contact.footer}
+            </span>
           </span>
           <a href="#inicio" className="hover:text-cream">
             Volver arriba ↑

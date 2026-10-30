@@ -50,6 +50,11 @@ export function PatchMark({ className = '' }: { className?: string }) {
 export function TomsMark({ className = '' }: { className?: string }) {
   const mask = `url(${asset('assets/sponsors/toms-burger.png')}) center / contain no-repeat`
   return (
-    <span role="img" aria-label="Tom’s Burger" className={`block bg-current ${className}`} style={{ mask, WebkitMask: mask, aspectRatio: '469 / 253' }} />
+    <span
+      role="img"
+      aria-label="Tom’s Burger"
+      className={`block bg-current ${className}`}
+      style={{ mask, WebkitMask: mask, aspectRatio: '469 / 253' }}
+    />
   )
 }

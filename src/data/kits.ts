@@ -6,6 +6,8 @@
  * a `KitId`, su rol a `ROLES` y su objeto a `KIT_LIST`.
  */
 
+import type { TopoTone } from '../components/ui/Topo'
+
 export type KitId = 'verde' | 'crema'
 export type KitRole = 'titular' | 'suplente' | 'alternativa'
 
@@ -36,7 +38,7 @@ export interface KitTheme {
   muted: string // texto secundario
   accent: string // detalles, hotspots, contornos
   onAccent: string // texto sobre el acento
-  topo: string // color de las curvas de nivel del fondo
+  topo: { tone: TopoTone; opacity: number } // curvas de nivel del fondo
 }
 
 /** Ruta base de una prenda; el componente arma `${src}.webp` y `${src}-640.webp`. */
@@ -83,7 +85,7 @@ const KIT_LIST: KitData[] = [
       muted: 'color-mix(in oklab, var(--color-cream) 70%, transparent)',
       accent: 'var(--color-gold)',
       onAccent: 'var(--color-forest-deep)',
-      topo: 'color-mix(in oklab, var(--color-gold) 16%, transparent)',
+      topo: { tone: 'gold', opacity: 0.16 },
     },
     pieces: {
       front: piece('titular-frente', 1038, 1466, 'camiseta verde bosque de frente'),
@@ -97,7 +99,13 @@ const KIT_LIST: KitData[] = [
       { id: 'vezza', x: 60, y: 42, title: 'VEZZA', text: 'El logo del sponsor, centrado en el pecho.' },
       { id: 'parche', x: 8, y: 31, title: 'Parche de manga', text: 'Círculo con la “R” y el rayo.' },
       { id: 'punos', x: 12, y: 46, title: 'Puños', text: 'Franjas doradas que cierran la manga.' },
-      { id: 'textura', x: 44, y: 74, title: 'Curvas de nivel', text: 'Textura topográfica en toda la tela, como un mapa del pago.' },
+      {
+        id: 'textura',
+        x: 44,
+        y: 74,
+        title: 'Curvas de nivel',
+        text: 'Textura topográfica en toda la tela, como un mapa del pago.',
+      },
     ],
     backHotspots: [
       { id: 'nombre', x: 50, y: 12, title: 'MEZZAVILLA', text: 'Nombre en la espalda, en dorado.' },
@@ -115,7 +123,7 @@ const KIT_LIST: KitData[] = [
       muted: 'color-mix(in oklab, var(--color-forest-deep) 72%, transparent)',
       accent: 'var(--color-forest)',
       onAccent: 'var(--color-cream)',
-      topo: 'color-mix(in oklab, var(--color-forest) 13%, transparent)',
+      topo: { tone: 'forest', opacity: 0.14 },
     },
     pieces: {
       front: piece('suplente-frente', 1110, 1458, 'camiseta crema de frente'),
