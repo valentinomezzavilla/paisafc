@@ -10,6 +10,14 @@ export interface KitColors {
   socks: string
   boots: string
   sole: string
+  /** Estampados (VEZZA, nombre, número, sponsor) y su contorno. */
+  print: string
+  printOutline: string
+  /** Fondo del parche de la manga. */
+  patchBg: string
+  /** Curvas de nivel de la tela y cuánto se marcan (0–1). */
+  topo: string
+  topoStrength: number
 }
 
 // Colores de src/styles/palette.css. El verde de la tela va un punto más claro que forest-deep:
@@ -23,6 +31,11 @@ export const KIT_COLORS: Record<KitId, KitColors> = {
     socks: '#1d4a2a',
     boots: '#1f4a2c',
     sole: '#12321c',
+    print: '#d6c48f',
+    printOutline: '#0e2716',
+    patchBg: '#1d4a2a',
+    topo: '#10301b',
+    topoStrength: 0.85,
   },
   crema: {
     fabric: '#e5decd',
@@ -33,5 +46,10 @@ export const KIT_COLORS: Record<KitId, KitColors> = {
     socks: '#e5decd',
     boots: '#f2efe8',
     sole: '#22432e',
+    print: '#1f4a2c',
+    printOutline: '#cdbb8b',
+    patchBg: '#efe9db',
+    topo: '#cfc6b0',
+    topoStrength: 0.5,
   },
 }
