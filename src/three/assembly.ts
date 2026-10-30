@@ -34,7 +34,7 @@ export function buildKitGeometry(): KitGeometry {
   const boots: [BootParts, BootParts] = [buildBoot('L'), buildBoot('R')]
 
   const shirtGeos = [shirt.body, shirt.sleeveL, shirt.sleeveR, shirt.collar]
-  const full = boxOf([...shirtGeos, shorts.legL, shorts.legR, ...socks.map((s) => s.cuff), ...boots.flatMap((b) => [b.upper, b.sole])])
+  const full = boxOf([...shirtGeos, shorts.legL, shorts.legR, ...socks.map((s) => s.cuff), ...boots.flatMap((b) => [b.upper, b.sole, b.studs])])
   cache = { shirt, shorts, socks, boots, bounds: { shirt: boxOf(shirtGeos), full } }
   return cache
 }

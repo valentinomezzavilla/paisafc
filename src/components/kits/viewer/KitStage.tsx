@@ -84,7 +84,8 @@ export function KitStage({ kit, view, scene, textures, hotspots, activeHotspot, 
         if (decal) {
           const right = new THREE.Vector3().crossVectors(up, a.normal).normalize()
           const tUp = new THREE.Vector3().crossVectors(a.normal, right).normalize()
-          p.addScaledVector(right, decal.size[0] / 2 + 0.012).addScaledVector(tUp, decal.size[1] / 2 - 0.004)
+          const [fx, fy] = decal.pinAt ?? [0.5, 0.5]
+          p.addScaledVector(right, decal.size[0] * fx + 0.012).addScaledVector(tUp, decal.size[1] * fy - 0.004)
         }
         return [id, p]
       }),

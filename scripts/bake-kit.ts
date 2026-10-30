@@ -2,6 +2,7 @@
 // Lo corre `npm run bake:kit`, que después lo comprime con meshopt en kit.glb.
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js'
+import { bakeVertexAO } from '../src/three/ao'
 import { buildKitScene } from '../src/three/bakeScene'
 
 // El exportador usa FileReader (API del navegador) para armar el binario.
@@ -26,6 +27,8 @@ Object.assign(globalThis, { FileReader: NodeFileReader })
 const out = new URL('../public/assets/kits/3d/', import.meta.url)
 mkdirSync(out, { recursive: true })
 
-const glb = (await new GLTFExporter().parseAsync(buildKitScene(), { binary: true })) as ArrayBuffer
+const scene = buildKitScene()
+bakeVertexAO(scene, { rays: 64 })
+const glb = (await new GLTFExporter().parseAsync(scene, { binary: true })) as ArrayBuffer
 writeFileSync(new URL('kit-raw.glb', out), Buffer.from(glb))
 console.log(`kit-raw.glb: ${(glb.byteLength / 1024).toFixed(0)} KB`)

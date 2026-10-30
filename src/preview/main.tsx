@@ -9,9 +9,11 @@ import '@fontsource-variable/instrument-sans/wght'
 import '../index.css'
 import type { KitId } from '../data/kits'
 import { KitModel, type KitView } from '../three/KitModel'
-import { StudioLights } from '../three/StudioLights'
-import { viewBounds, type KitSceneData } from '../three/kitScene'
-import { useKitAssets, type KitTextures } from '../three/useKitScene'
+import { EXPOSURE, StudioLights } from '../three/StudioLights'
+import { bakeVertexAO } from '../three/ao'
+import { buildKitScene } from '../three/bakeScene'
+import { readKitScene, viewBounds, type KitSceneData } from '../three/kitScene'
+import { loadKitTextures, useKitAssets, type KitAssets, type KitTextures } from '../three/useKitScene'
 
 /**
  * Punto de control de la etapa 1: el modelo sin logos, girable, al lado del mockup.
@@ -26,7 +28,30 @@ const initial = {
   ui: params.get('ui') !== '0',
   /** bg=0: fondo transparente, para los pósters del sitio. */
   bg: params.get('bg') !== '0',
+  /** live=1: arma la geometría en el navegador en vez de leer kit.glb (para probar cambios sin hornear). */
+  live: params.get('live') === '1',
+  /** noshadow=1: sin sombras proyectadas, para separar defectos de sombra de los de material. */
+  noShadow: params.get('noshadow') === '1',
 }
+
+function useLiveAssets(kits: KitId[]): KitAssets | null {
+  const [assets, setAssets] = useState<KitAssets | null>(null)
+  useEffect(() => {
+    if (!initial.live) return
+    let alive = true
+    void Promise.all(kits.map(loadKitTextures)).then((tex) => {
+      const built = buildKitScene()
+      bakeVertexAO(built, { rays: 24 })
+      if (alive) setAssets({ scene: readKitScene(built), textures: Object.fromEntries(kits.map((k, i) => [k, tex[i]])) as KitAssets['textures'] })
+    })
+    return () => {
+      alive = false
+    }
+  }, [kits])
+  return assets
+}
+
+const BOTH: KitId[] = ['verde', 'crema']
 
 const BG: Record<KitId, [string, string]> = {
   verde: ['#1a3d24', '#0a2111'],
@@ -104,17 +129,18 @@ function Preview() {
   const [view, setView] = useState<KitView>(initial.view)
   const [angle, setAngle] = useState(initial.angle)
   const [a, b] = BG[kit]
-  const loaded = useKitAssets(['verde', 'crema'])
-  const assets = loaded === 'error' ? null : loaded
+  const loaded = useKitAssets(BOTH)
+  const live = useLiveAssets(BOTH)
+  const assets = initial.live ? live : loaded === 'error' ? null : loaded
 
   return (
     <div className={`flex h-svh flex-col text-cream lg:flex-row ${initial.bg ? 'bg-neutral-900' : ''}`}>
       <div className="relative min-h-0 flex-1" style={initial.bg ? { background: `radial-gradient(110% 80% at 50% 40%, ${a} 30%, ${b})` } : undefined}>
         <Canvas
-          shadows="soft"
+          shadows={initial.noShadow ? false : 'soft'}
           dpr={[1, 2]}
           camera={{ fov: FOV, near: 0.05, far: 20 }}
-          gl={{ antialias: true, alpha: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: 1.05, preserveDrawingBuffer: true }}
+          gl={{ antialias: true, alpha: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: EXPOSURE, preserveDrawingBuffer: true }}
         >
           {assets && <Scene kit={kit} view={view} angle={angle} scene={assets.scene} textures={assets.textures[kit]} />}
         </Canvas>

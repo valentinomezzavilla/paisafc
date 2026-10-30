@@ -1,10 +1,12 @@
 import * as THREE from 'three'
 import { DecalGeometry } from 'three/addons/geometries/DecalGeometry.js'
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js'
 import { ANCHORS, anchorOnSurface, DECALS, pieceMesh, type AnchorId } from './anchors'
 import { buildKitGeometry } from './assembly'
 
 /** Los calcos quedan apenas despegados de la tela para que no titilen contra ella. */
 const DECAL_LIFT = 0.0006
+/** Profundidad mínima del proyector; los calcos anchos necesitan más para llegar a la tela que se aleja en las curvas. */
 const DECAL_DEPTH = 0.05
 
 /** Recorre KitGeometry y devuelve cada geometría con su nombre ("shirt-body", "socks-0-cuff"...). */
@@ -21,13 +23,14 @@ function decalGeometry(mesh: THREE.Mesh, position: THREE.Vector3, normal: THREE.
   const helper = new THREE.Object3D()
   helper.position.copy(position)
   helper.lookAt(position.clone().add(normal))
-  const geo = new DecalGeometry(mesh, position, helper.rotation, new THREE.Vector3(size[0], size[1], DECAL_DEPTH))
+  const geo = new DecalGeometry(mesh, position, helper.rotation, new THREE.Vector3(size[0], size[1], Math.max(DECAL_DEPTH, size[0] * 0.5)))
   const pos = geo.getAttribute('position')
   const nor = geo.getAttribute('normal')
   for (let i = 0; i < pos.count; i++) {
     pos.setXYZ(i, pos.getX(i) + nor.getX(i) * DECAL_LIFT, pos.getY(i) + nor.getY(i) * DECAL_LIFT, pos.getZ(i) + nor.getZ(i) * DECAL_LIFT)
   }
-  return geo
+  // DecalGeometry sale sin índices (cada triángulo con sus tres vértices): soldarlos achica el archivo a la mitad
+  return mergeVertices(geo, 1e-5)
 }
 
 /**

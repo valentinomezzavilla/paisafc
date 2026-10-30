@@ -6,7 +6,8 @@ export function makeCanvas(w: number, h: number, px = 1024) {
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(w * scale)
   canvas.height = Math.round(h * scale)
-  const ctx = canvas.getContext('2d')!
+  // Del canvas se lee el alfa para armar el relieve: en memoria de CPU, así no hay lecturas lentas desde la GPU
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
   ctx.scale(scale, scale)
   return { canvas, ctx }
 }
@@ -39,6 +40,21 @@ export function tinted(img: CanvasImageSource, w: number, h: number, color: stri
   ctx.fillStyle = color
   ctx.fillRect(0, 0, w, h)
   return c
+}
+
+/**
+ * Cede el hilo principal para que el navegador atienda el scroll y el dibujo entre dos trabajos pesados.
+ * Usa un canal de mensajes y no setTimeout: en pestañas en segundo plano los timers se frenan a uno por segundo.
+ */
+export function yieldToMain(): Promise<void> {
+  return new Promise((resolve) => {
+    const { port1, port2 } = new MessageChannel()
+    port1.onmessage = () => {
+      port1.close()
+      resolve()
+    }
+    port2.postMessage(null)
+  })
 }
 
 /** Espera a que estén las tipografías del sitio: el texto del canvas se dibuja con ellas. */
@@ -80,6 +96,41 @@ export function drawText(ctx: CanvasRenderingContext2D, text: string, x: number,
     ctx.strokeText(text, 0, 0)
   }
   ctx.fillStyle = s.fill
+  ctx.fillText(text, 0, 0)
+  ctx.restore()
+}
+
+interface FitStyle {
+  weight: number
+  family: string
+  spacing?: number
+  fill: string
+  /** Engrosa la letra (px de fuente, medidos antes de escalar): para pesos que la tipografía no trae. */
+  boost?: number
+}
+
+/** Texto que llena exactamente la caja (x, y, w, h): se estira o se achica en cada eje hasta que la tinta calce. */
+export function drawTextFit(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, w: number, h: number, s: FitStyle) {
+  ctx.save()
+  ctx.font = `${s.weight} 100px "${s.family}"`
+  ctx.letterSpacing = `${(s.spacing ?? 0) * 100}px`
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  const m = ctx.measureText(text)
+  const pad = (s.boost ?? 0) / 2
+  const bw = m.actualBoundingBoxLeft + m.actualBoundingBoxRight + pad * 2
+  const bh = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent + pad * 2
+  const sx = w / bw
+  const sy = h / bh
+  ctx.translate(x + (m.actualBoundingBoxLeft + pad) * sx, y + (m.actualBoundingBoxAscent + pad) * sy)
+  ctx.scale(sx, sy)
+  ctx.fillStyle = s.fill
+  if (s.boost) {
+    ctx.lineJoin = 'round'
+    ctx.lineWidth = s.boost
+    ctx.strokeStyle = s.fill
+    ctx.strokeText(text, 0, 0)
+  }
   ctx.fillText(text, 0, 0)
   ctx.restore()
 }

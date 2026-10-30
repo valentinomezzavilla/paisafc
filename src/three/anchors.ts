@@ -34,15 +34,15 @@ export type AnchorId =
   | 'shortEscudo'
 
 export const ANCHORS: Record<AnchorId, AnchorSpec> = {
-  cuello: { piece: 'collar', angle: 28, y: 1.49 },
-  escudo: { piece: 'torso', angle: 34, y: 1.335 },
-  vezza: { piece: 'torso', angle: 0, y: 1.215 },
-  parche: { piece: 'sleeveL', angle: 75, y: 0.085 },
+  cuello: { piece: 'collar', angle: 44, y: 1.512 },
+  escudo: { piece: 'torso', angle: 40, y: 1.335 },
+  vezza: { piece: 'torso', angle: 0, y: 1.205 },
+  parche: { piece: 'sleeveL', angle: 48, y: 0.105 },
   punos: { piece: 'sleeveL', angle: 35, y: SLEEVE_LENGTH - 0.022 },
   textura: { piece: 'torso', angle: -22, y: 1.0 },
-  nombre: { piece: 'torso', angle: 180, y: 1.395 },
-  numero: { piece: 'torso', angle: 180, y: 1.205 },
-  sponsor: { piece: 'torso', angle: 180, y: 1.015 },
+  nombre: { piece: 'torso', angle: 180, y: 1.385 },
+  numero: { piece: 'torso', angle: 180, y: 1.21 },
+  sponsor: { piece: 'torso', angle: 180, y: 1.0 },
   shortEscudo: { piece: 'legL', angle: -28, y: 0.62 },
 }
 
@@ -53,17 +53,25 @@ export interface DecalSpec {
   anchor: AnchorId
   /** Ancho y alto en metros. */
   size: [number, number]
+  /**
+   * Dónde va el punto del detalle, en fracción del tamaño desde el centro (x a la derecha, y hacia arriba).
+   * Por defecto, la esquina superior derecha, apenas afuera.
+   */
+  pinAt?: [number, number]
 }
 
-// Tamaños medidos sobre el mockup, con la camiseta a escala real.
+// Tamaños medidos sobre el mockup (frente y espalda) respecto del ancho del torso, a escala real. Cada
+// medida es la de la tinta del diseño: VEZZA ocupa casi la mitad del ancho del pecho; el nombre, el 83 %
+// de la espalda; el 11, 23 cm de alto.
 export const DECALS: DecalSpec[] = [
-  { id: 'escudo', anchor: 'escudo', size: [0.07, 0.079] },
-  { id: 'vezza', anchor: 'vezza', size: [0.17, 0.102] },
-  { id: 'parche', anchor: 'parche', size: [0.072, 0.072] },
-  { id: 'nombre', anchor: 'nombre', size: [0.27, 0.06] },
-  { id: 'numero', anchor: 'numero', size: [0.2, 0.2] },
-  { id: 'sponsor', anchor: 'sponsor', size: [0.21, 0.113] },
-  { id: 'shortEscudo', anchor: 'shortEscudo', size: [0.048, 0.054] },
+  { id: 'escudo', anchor: 'escudo', size: [0.086, 0.0975] },
+  // El punto va a la altura de la palabra, para no taparse con el escudo que está más arriba
+  { id: 'vezza', anchor: 'vezza', size: [0.178, 0.19], pinAt: [0.64, -0.3] },
+  { id: 'parche', anchor: 'parche', size: [0.1, 0.1] },
+  { id: 'nombre', anchor: 'nombre', size: [0.31, 0.052] },
+  { id: 'numero', anchor: 'numero', size: [0.158, 0.234] },
+  { id: 'sponsor', anchor: 'sponsor', size: [0.233, 0.126] },
+  { id: 'shortEscudo', anchor: 'shortEscudo', size: [0.05, 0.0567] },
 ]
 
 const meshCache = new WeakMap<THREE.BufferGeometry, THREE.Mesh>()

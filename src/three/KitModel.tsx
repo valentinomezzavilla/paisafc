@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import type { KitId } from '../data/kits'
 import { DECALS } from './anchors'
-import { topoOffset, topoRepeat } from './design/topoTexture'
+import { patternLayout } from './design/topoTexture'
+import type { DecalMaps } from './design/decalTextures'
 import { fabricMaterial } from './fabric'
 import { cuffStripeColors, KIT_COLORS } from './kitColors'
 import type { KitSceneData } from './kitScene'
@@ -16,14 +17,14 @@ const PERIMETER = { torso: 1.1, sleeve: 0.47, collar: 0.09, legs: 0.66, sock: 0.
 /** Cuánto bajan short, medias y botines cuando se ocultan en la vista de camiseta. */
 const LOWER_DROP = 0.35
 
-function useKitMaterials(kit: KitId, textures: KitTextures) {
+function useKitMaterials(kit: KitId, textures: KitTextures, ao: boolean) {
   const materials = useMemo(() => {
     const c = KIT_COLORS[kit]
     const topo = (perimeter: number) => {
       const t = textures.topo.clone()
-      const [ru, rv] = topoRepeat(perimeter)
-      t.repeat.set(ru, rv)
-      t.offset.x = topoOffset(ru)
+      const { repeat, offsetX } = patternLayout(kit, perimeter)
+      t.repeat.set(...repeat)
+      t.offset.x = offsetX
       t.needsUpdate = true
       return t
     }
@@ -31,14 +32,25 @@ function useKitMaterials(kit: KitId, textures: KitTextures) {
       m.side = THREE.DoubleSide
       return m
     }
-    const pair = (color: string, perimeter: number, withTopo = false) => {
+    // Franjas que van pegadas a otra tela: se dibujan un poco por delante para que no titilen.
+    const offsetOver = (m: THREE.MeshPhysicalMaterial) => {
+      m.polygonOffset = true
+      m.polygonOffsetFactor = -2
+      m.polygonOffsetUnits = -2
+      return m
+    }
+    const pair = (color: string, perimeter: number, withTopo = false, weave: 'knit' | 'rib' = 'knit') => {
       const map = withTopo ? topo(perimeter) : undefined
-      return { outer: fabricMaterial(color, { perimeter, map }), inner: fabricMaterial(color, { perimeter, map, inner: true }) }
+      return {
+        outer: fabricMaterial(color, { perimeter, map, ao, weave }),
+        inner: fabricMaterial(color, { perimeter, map, inner: true, ao, weave }),
+      }
     }
     const [stripeA, stripeB] = cuffStripeColors(c)
-    const decal = (map: THREE.Texture, roughness: number) =>
+    const decal = ({ map, normal }: DecalMaps, roughness: number) =>
       new THREE.MeshPhysicalMaterial({
         map,
+        normalMap: normal,
         transparent: true,
         roughness,
         specularIntensity: 0.4,
@@ -49,22 +61,23 @@ function useKitMaterials(kit: KitId, textures: KitTextures) {
     return {
       torso: pair(c.fabric, PERIMETER.torso, true),
       sleeve: pair(c.fabric, PERIMETER.sleeve, true),
-      collar: twoSided(fabricMaterial(c.fabric, { perimeter: PERIMETER.collar })),
-      trim: twoSided(fabricMaterial(c.trim, { perimeter: PERIMETER.collar, roughness: 0.7 })),
-      cuffA: twoSided(fabricMaterial(stripeA, { perimeter: PERIMETER.sleeve, roughness: 0.7 })),
-      cuffB: twoSided(fabricMaterial(stripeB, { perimeter: PERIMETER.sleeve, roughness: 0.7 })),
+      collar: twoSided(fabricMaterial(c.fabric, { perimeter: PERIMETER.collar, ao, weave: 'ribV' })),
+      trim: offsetOver(twoSided(fabricMaterial(c.trim, { perimeter: PERIMETER.collar, roughness: 0.7, ao }))),
+      cuffA: twoSided(fabricMaterial(stripeA, { perimeter: PERIMETER.sleeve, roughness: 0.7, ao })),
+      cuffB: twoSided(fabricMaterial(stripeB, { perimeter: PERIMETER.sleeve, roughness: 0.7, ao })),
       legs: pair(c.shorts, PERIMETER.legs),
-      stripe: twoSided(fabricMaterial(c.shortsStripe, { perimeter: PERIMETER.collar, roughness: 0.7 })),
-      sock: pair(c.socks, PERIMETER.sock),
-      boot: new THREE.MeshPhysicalMaterial({ color: c.boots, roughness: 0.42, clearcoat: 0.35, clearcoatRoughness: 0.4 }),
-      bootInner: new THREE.MeshStandardMaterial({ color: new THREE.Color(c.boots).multiplyScalar(0.3), side: THREE.BackSide }),
-      sole: new THREE.MeshStandardMaterial({ color: c.sole, roughness: 0.65 }),
+      stripe: twoSided(fabricMaterial(c.shortsStripe, { perimeter: PERIMETER.collar, roughness: 0.7, ao })),
+      sock: pair(c.socks, PERIMETER.sock, false, 'rib'),
+      boot: new THREE.MeshPhysicalMaterial({ color: c.boots, roughness: 0.42, clearcoat: 0.35, clearcoatRoughness: 0.4, vertexColors: ao }),
+      bootInner: new THREE.MeshStandardMaterial({ color: new THREE.Color(c.boots).multiplyScalar(0.3), side: THREE.BackSide, vertexColors: ao }),
+      sole: new THREE.MeshStandardMaterial({ color: c.sole, roughness: 0.65, vertexColors: ao }),
+      lace: new THREE.MeshStandardMaterial({ color: new THREE.Color(c.boots).lerp(new THREE.Color('#ffffff'), 0.4), roughness: 0.85, vertexColors: ao }),
       // Vinilo estampado: un poco más liso que la tela. El escudo es bordado: más mate.
       decals: Object.fromEntries(
         DECALS.map((d) => [d.id, decal(textures.decals[d.id], d.id === 'escudo' || d.id === 'shortEscudo' ? 0.75 : 0.55)]),
       ) as Record<(typeof DECALS)[number]['id'], THREE.MeshPhysicalMaterial>,
     }
-  }, [kit, textures])
+  }, [kit, textures, ao])
 
   useEffect(
     () => () => {
@@ -77,8 +90,10 @@ function useKitMaterials(kit: KitId, textures: KitTextures) {
       for (const m of all) {
         const p = m as THREE.MeshPhysicalMaterial
         // Los clones de textura comparten la imagen: liberar el clon no borra el original.
-        if (p.map && !Object.values(textures.decals).includes(p.map as THREE.CanvasTexture)) p.map.dispose()
-        p.normalMap?.dispose()
+        // Las texturas de los calcos son del kit (se comparten); la tela clona las suyas.
+        const shared = Object.values(textures.decals).flatMap((d) => [d.map, d.normal])
+        if (p.map && !shared.includes(p.map as THREE.CanvasTexture)) p.map.dispose()
+        if (p.normalMap && !shared.includes(p.normalMap as THREE.CanvasTexture)) p.normalMap.dispose()
         m.dispose()
       }
     },
@@ -109,7 +124,7 @@ interface KitModelProps {
 /** Conjunto completo en maniquí invisible. En la vista "shirt" el short, las medias y los botines bajan y se ocultan. */
 export function KitModel({ kit, view, scene, textures, instant = false }: KitModelProps) {
   const g = scene.geo
-  const m = useKitMaterials(kit, textures)
+  const m = useKitMaterials(kit, textures, scene.ao)
   const lower = useRef<THREE.Group>(null)
   const show = useRef(view === 'full' ? 1 : 0)
 
@@ -150,6 +165,8 @@ export function KitModel({ kit, view, scene, textures, instant = false }: KitMod
             <mesh geometry={g[`boots-${i}-upper`]} material={m.boot} castShadow />
             <mesh geometry={g[`boots-${i}-upper`]} material={m.bootInner} />
             <mesh geometry={g[`boots-${i}-sole`]} material={m.sole} castShadow />
+            <mesh geometry={g[`boots-${i}-studs`]} material={m.sole} castShadow />
+            <mesh geometry={g[`boots-${i}-laces`]} material={m.lace} />
           </group>
         ))}
       </group>

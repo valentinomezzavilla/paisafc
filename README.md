@@ -102,11 +102,17 @@ El modelo se arma por código (`src/three/`) y se hornea a un `.glb` con las pie
 cambia la geometría o la posición de un calco:
 
 ```bash
-npm run bake:kit                    # public/assets/kits/3d/kit.glb (meshopt, ~300 KB)
+npm run bake:kit                    # public/assets/kits/3d/kit.glb (meshopt, ~385 KB, con oclusión ambiental)
 npm run dev                         # y en otra terminal:
 node scripts/snap-posters.mjs       # pósters webp (public/assets/kits/3d/posters/)
 node scripts/snap-preview.mjs       # capturas de la página de revisión (preview-3d.html)
 ```
+
+El `.glb` lleva la oclusión ambiental horneada en el color de los vértices (`src/three/ao.ts`): es lo que
+oscurece las axilas, debajo del cuello y adentro de las mangas. Los tamaños de los estampados
+(`DECALS` en `src/three/anchors.ts`) están medidos sobre `camiseta-mockup.jpg`: VEZZA ocupa casi la mitad
+del ancho del pecho, el nombre el 83 % de la espalda y el 11 mide 23 cm. Para probar un cambio de forma
+sin hornear, abrí `preview-3d.html?live=1` (arma la geometría en el navegador, tarda unos segundos).
 
 `three` y el `.glb` van en chunks que se cargan cuando el navegador queda libre y la sección está a
 menos de una pantalla. Hasta entonces (y sin WebGL, o si falla la carga) se ve el póster. Los pósters

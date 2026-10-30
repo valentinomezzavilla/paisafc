@@ -15,8 +15,9 @@ describe('conjunto en maniquí invisible', () => {
 
   it('el short no atraviesa la camiseta por arriba del ruedo', () => {
     for (let y = kit.shirt.hemY + 0.01; y <= kit.shorts.topY; y += 0.01) {
-      expect(halfWidthAt(legs, y, 0.006), `ancho a ${y.toFixed(2)}`).toBeLessThan(halfWidthAt(kit.shirt.body, y, 0.006))
-      expect(halfDepthAt(legs, y, 0.006), `profundidad a ${y.toFixed(2)}`).toBeLessThan(halfDepthAt(kit.shirt.body, y, 0.006))
+      // Los anillos del torso no están equiespaciados en altura: la banda tiene que ser más ancha que su separación
+      expect(halfWidthAt(legs, y, 0.012), `ancho a ${y.toFixed(2)}`).toBeLessThan(halfWidthAt(kit.shirt.body, y, 0.012))
+      expect(halfDepthAt(legs, y, 0.012), `profundidad a ${y.toFixed(2)}`).toBeLessThan(halfDepthAt(kit.shirt.body, y, 0.012))
     }
   })
 

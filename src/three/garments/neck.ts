@@ -1,6 +1,9 @@
 import * as THREE from 'three'
 import { BODY } from '../body'
 
+/** Altura del escote. El cuello de una camiseta queda más bajo que la base del cuello del cuerpo. */
+export const NECK_Y = BODY.neckBase - 0.014
+
 /** Contorno del escote: un óvalo apenas corrido hacia atrás, con la V del cuello polo adelante. */
 export const NECK = {
   rx: BODY.neckRadius + 0.012,
@@ -19,6 +22,6 @@ export function neckPoint(t: number): THREE.Vector3 {
   const x = NECK.rx * Math.sin(t)
   // La V se abre sobre el pecho: los bordes bajan y se adelantan hasta apoyarse en la tela.
   const z = NECK.cz + NECK.rz * Math.cos(t) + inV * 0.055
-  const y = BODY.neckBase - NECK.vDepth * inV ** 1.15
+  const y = NECK_Y - NECK.vDepth * inV ** 1.15
   return new THREE.Vector3(x * (1 - inV * 0.65), y, z)
 }
