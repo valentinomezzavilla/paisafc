@@ -3,7 +3,7 @@ import * as THREE from 'three'
 /** Celdas de la trama dentro de la textura (por lado). */
 const CELLS = 16
 /** Tamaño de una celda de la trama, en metros. */
-export const KNIT_CELL = 0.0022
+export const KNIT_CELL = 0.003
 
 let knitMap: THREE.CanvasTexture | null = null
 
@@ -71,14 +71,20 @@ interface FabricOptions {
   roughness?: number
   /** Cara interna de la prenda: más oscura, como la sombra de adentro. */
   inner?: boolean
+  /** Mapa de color (curvas de nivel); si no hay, color liso. */
+  map?: THREE.Texture
 }
 
-export function fabricMaterial(color: string, { perimeter = 1, sheenColor, roughness = 0.82, inner = false }: FabricOptions = {}): THREE.MeshPhysicalMaterial {
+export function fabricMaterial(
+  color: string,
+  { perimeter = 1, sheenColor, roughness = 0.82, inner = false, map: colorMap }: FabricOptions = {},
+): THREE.MeshPhysicalMaterial {
   const map = createFabricNormalMap().clone()
   map.needsUpdate = true
   map.repeat.set(...knitRepeat(perimeter))
 
-  const base = new THREE.Color(color)
+  // Con mapa, el color sale de la textura; el blanco no la tiñe.
+  const base = new THREE.Color(colorMap ? '#ffffff' : color)
   if (inner) base.multiplyScalar(0.45)
   return new THREE.MeshPhysicalMaterial({
     color: base,
@@ -86,8 +92,11 @@ export function fabricMaterial(color: string, { perimeter = 1, sheenColor, rough
     sheen: inner ? 0 : 0.6,
     sheenRoughness: 0.5,
     sheenColor: new THREE.Color(sheenColor ?? color).lerp(new THREE.Color('#ffffff'), 0.35),
+    map: colorMap ?? null,
     normalMap: map,
-    normalScale: new THREE.Vector2(0.35, 0.35),
+    normalScale: new THREE.Vector2(0.6, 0.6),
+    // Brillo especular bajo: la tela no refleja la caja de luz como un plástico.
+    specularIntensity: 0.35,
     side: inner ? THREE.BackSide : THREE.FrontSide,
   })
 }

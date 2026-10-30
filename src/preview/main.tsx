@@ -8,8 +8,9 @@ import '@fontsource-variable/big-shoulders-display/wght'
 import '@fontsource-variable/instrument-sans/wght'
 import '../index.css'
 import type { KitId } from '../data/kits'
-import { buildKitGeometry } from '../three/assembly'
 import { KitModel, type KitView } from '../three/KitModel'
+import { viewBounds, type KitSceneData } from '../three/kitScene'
+import { useKitAssets, type KitTextures } from '../three/useKitScene'
 
 /**
  * Punto de control de la etapa 1: el modelo sin logos, girable, al lado del mockup.
@@ -18,8 +19,8 @@ import { KitModel, type KitView } from '../three/KitModel'
 
 const params = new URLSearchParams(location.search)
 const initial = {
-  kit: (params.get('kit') as KitId) ?? 'verde',
-  view: (params.get('view') as KitView) ?? 'shirt',
+  kit: (params.get('kit') === 'crema' ? 'crema' : 'verde') as KitId,
+  view: (params.get('view') === 'full' ? 'full' : 'shirt') as KitView,
   angle: Number(params.get('angle') ?? 0),
   ui: params.get('ui') !== '0',
 }
@@ -31,12 +32,11 @@ const BG: Record<KitId, [string, string]> = {
 const FOV = 28
 
 /** Encuadra la cámara a la caja de la vista. */
-function Framing({ view, controls }: { view: KitView; controls: React.RefObject<OrbitControlsImpl | null> }) {
+function Framing({ view, scene, controls }: { view: KitView; scene: KitSceneData; controls: React.RefObject<OrbitControlsImpl | null> }) {
   const camera = useThree((s) => s.camera as THREE.PerspectiveCamera)
   const size = useThree((s) => s.size)
   useEffect(() => {
-    const kit = buildKitGeometry()
-    const box = view === 'full' ? kit.bounds.full : kit.bounds.shirt
+    const box = viewBounds(scene, view)
     const center = box.getCenter(new THREE.Vector3())
     const dims = box.getSize(new THREE.Vector3())
     const fitH = dims.y / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2))
@@ -46,24 +46,30 @@ function Framing({ view, controls }: { view: KitView; controls: React.RefObject<
     camera.lookAt(center)
     controls.current?.target.copy(center)
     controls.current?.update()
-  }, [view, camera, controls, size])
+  }, [view, scene, camera, controls, size])
   return null
 }
 
-/** Avisa al script de capturas cuando ya se dibujaron unos cuadros. */
+/**
+ * Avisa al script de capturas cuando ya se dibujaron unos cuadros. Sin la interfaz (modo captura)
+ * deja de dibujar: con el render por software cada cuadro tarda y la captura se quedaría esperando.
+ */
 function ReadySignal() {
   const frames = useRef(0)
+  const setFrameloop = useThree((s) => s.setFrameloop)
   useFrame(() => {
-    if (++frames.current === 20) document.body.dataset.ready = '1'
+    if (++frames.current !== 20) return
+    document.body.dataset.ready = '1'
+    if (!initial.ui) setFrameloop('never')
   })
   return null
 }
 
-function Scene({ kit, view, angle }: { kit: KitId; view: KitView; angle: number }) {
+function Scene({ kit, view, angle, scene, textures }: { kit: KitId; view: KitView; angle: number; scene: KitSceneData; textures: KitTextures }) {
   const controls = useRef<OrbitControlsImpl>(null)
   return (
     <>
-      <Framing view={view} controls={controls} />
+      <Framing view={view} scene={scene} controls={controls} />
       <ReadySignal />
       <OrbitControls ref={controls} enablePan={false} enableDamping minPolarAngle={Math.PI * 0.32} maxPolarAngle={Math.PI * 0.62} />
 
@@ -89,7 +95,7 @@ function Scene({ kit, view, angle }: { kit: KitId; view: KitView; angle: number 
       </Environment>
 
       <group rotation-y={THREE.MathUtils.degToRad(angle)}>
-        <KitModel kit={kit} view={view} />
+        <KitModel kit={kit} view={view} scene={scene} textures={textures} instant />
       </group>
       {view === 'full' && <ContactShadows position={[0, 0, 0]} opacity={0.55} scale={2.4} blur={2.4} far={1} resolution={1024} />}
     </>
@@ -113,6 +119,7 @@ function Preview() {
   const [view, setView] = useState<KitView>(initial.view)
   const [angle, setAngle] = useState(initial.angle)
   const [a, b] = BG[kit]
+  const assets = useKitAssets(['verde', 'crema'])
 
   return (
     <div className="flex h-svh flex-col bg-neutral-900 text-cream lg:flex-row">
@@ -123,7 +130,7 @@ function Preview() {
           camera={{ fov: FOV, near: 0.05, far: 20 }}
           gl={{ antialias: true, toneMapping: THREE.AgXToneMapping, toneMappingExposure: 1.35, preserveDrawingBuffer: true }}
         >
-          <Scene kit={kit} view={view} angle={angle} />
+          {assets && <Scene kit={kit} view={view} angle={angle} scene={assets.scene} textures={assets.textures[kit]} />}
         </Canvas>
         {initial.ui && (
           <div className="absolute inset-x-0 bottom-4 flex flex-wrap justify-center gap-2 px-4">

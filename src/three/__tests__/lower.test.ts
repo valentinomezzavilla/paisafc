@@ -69,4 +69,17 @@ describe('botines', () => {
       expect(outwardNormalRatio(b.upper, center)).toBeGreaterThan(0.9)
     }
   })
+
+  it('la suela izquierda es el espejo de la derecha, con las caras hacia afuera', () => {
+    const l = bbox(boots.L.sole)
+    const r = bbox(boots.R.sole)
+    expect(l.min.x).toBeCloseTo(-r.max.x, 4)
+    expect(l.max.z).toBeCloseTo(r.max.z, 4)
+    for (const [side, b] of Object.entries(boots)) {
+      const sign = side === 'L' ? -1 : 1
+      const center = (p: THREE.Vector3) => new THREE.Vector3(sign * BODY.legSpacing, 0.0065, 0.04).lerp(p, 0.001)
+      b.sole.computeVertexNormals()
+      expect(outwardNormalRatio(b.sole, center), side).toBeGreaterThan(0.6)
+    }
+  })
 })

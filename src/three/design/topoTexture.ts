@@ -4,7 +4,7 @@ import { asset } from '../../lib/asset'
 import { KIT_COLORS } from '../kitColors'
 
 /** Tamaño real de una repetición del dibujo de curvas sobre la tela, en metros (proporción del SVG, 16:10). */
-export const TOPO_TILE: [number, number] = [0.56, 0.35]
+export const TOPO_TILE: [number, number] = [0.9, 0.56]
 
 /**
  * Repeticiones del dibujo en [u, v]. Alrededor de la pieza (u va de 0 a 1) un número par: la textura se
@@ -13,6 +13,14 @@ export const TOPO_TILE: [number, number] = [0.56, 0.35]
  */
 export function topoRepeat(perimeter: number): [number, number] {
   return [Math.max(2, 2 * Math.round(perimeter / TOPO_TILE[0] / 2)), 1 / TOPO_TILE[1]]
+}
+
+/**
+ * Corrimiento en u para que los ejes del espejo caigan en los costados (u = 0,25 y 0,75): en el centro
+ * del pecho o de la espalda el dibujo se vería simétrico como un caleidoscopio.
+ */
+export function topoOffset(repeatU: number): number {
+  return (((-repeatU * 0.25) % 1) + 1) % 1
 }
 
 const cache = new Map<KitId, Promise<THREE.CanvasTexture>>()

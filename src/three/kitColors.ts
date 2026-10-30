@@ -38,18 +38,22 @@ export const KIT_COLORS: Record<KitId, KitColors> = {
     topoStrength: 0.85,
   },
   crema: {
-    fabric: '#e5decd',
+    // Un punto más cálido que --color-cream: el tone mapping lo agrisa.
+    fabric: '#ebdfc2',
     trim: '#22432e',
     trim2: '#cdbb8b',
     shorts: '#1d4a2a',
-    shortsStripe: '#e5decd',
-    socks: '#e5decd',
+    shortsStripe: '#ebdfc2',
+    socks: '#ebdfc2',
     boots: '#f2efe8',
     sole: '#22432e',
     print: '#1f4a2c',
     printOutline: '#cdbb8b',
-    patchBg: '#efe9db',
-    topo: '#cfc6b0',
+    patchBg: '#f1e8d2',
+    topo: '#d3c7a8',
     topoStrength: 0.5,
   },
 }
+
+/** Colores de las dos franjas del puño: la suplente alterna; si no hay trim2, las dos iguales. */
+export const cuffStripeColors = (c: KitColors): [string, string] => [c.trim, c.trim2 ?? c.trim]

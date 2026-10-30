@@ -60,4 +60,11 @@ describe('buildShirt', () => {
       }
     }
   })
+
+  it('cada puño tiene dos franjas separadas (pueden ir de distinto color)', () => {
+    for (const geo of [shirt.cuffTrimL, shirt.cuffTrimR, shirt.cuffTrim2L, shirt.cuffTrim2R]) {
+      expect(geo.getAttribute('position').count).toBeGreaterThan(0)
+    }
+    expect(bbox(shirt.cuffTrimR).max.y).not.toBeCloseTo(bbox(shirt.cuffTrim2R).max.y, 3)
+  })
 })

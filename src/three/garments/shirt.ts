@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { BODY } from '../body'
 import { loft, superellipse, tubeRing, type Ring } from '../loft'
 import { buildCollar } from './collar'
@@ -11,8 +10,12 @@ export interface ShirtParts {
   sleeveR: THREE.BufferGeometry
   collar: THREE.BufferGeometry
   collarTrim: THREE.BufferGeometry
+  /** Franja del puño más cerca del hombro… */
   cuffTrimL: THREE.BufferGeometry
   cuffTrimR: THREE.BufferGeometry
+  /** …y la más cerca del borde. */
+  cuffTrim2L: THREE.BufferGeometry
+  cuffTrim2R: THREE.BufferGeometry
   hemY: number
 }
 
@@ -62,7 +65,7 @@ function torsoFolds(t: number, y: number): number {
   // Caída general, de baja frecuencia
   const drape = 0.0022 * Math.cos(5 * t) * Math.sin(7 * y + 0.6) + 0.0012 * Math.cos(11 * t) * Math.sin(17 * y)
   // Arrugas en abanico que bajan desde la axila
-  const armpit = 0.0045 * side * smooth(y, 1.12, 1.24) * (1 - smooth(y, 1.27, 1.33)) * Math.sin(55 * (y + 0.04 * Math.cos(t)))
+  const armpit = 0.0026 * side * smooth(y, 1.14, 1.25) * (1 - smooth(y, 1.27, 1.33)) * Math.sin(40 * (y + 0.04 * Math.cos(t)))
   // Ondas suaves sobre la cintura, a los costados
   const waist = 0.003 * side * smooth(y, 0.9, 0.97) * (1 - smooth(y, 1.05, 1.12)) * Math.sin(42 * y + 1.1)
   // Vuelo del ruedo
@@ -155,7 +158,7 @@ export function sleeveFrame(sign: 1 | -1): SleeveFrame {
   return { axis, center, radius, offset }
 }
 
-function buildSleeve(sign: 1 | -1): { sleeve: THREE.BufferGeometry; trim: THREE.BufferGeometry } {
+function buildSleeve(sign: 1 | -1): { sleeve: THREE.BufferGeometry; trims: [THREE.BufferGeometry, THREE.BufferGeometry] } {
   const f = sleeveFrame(sign)
   const ring = (s: number, dr = 0) => tubeRing(f.center(s), f.axis, f.radius(s) + dr, (f.radius(s) + dr) * 0.93, SLEEVE_SEGMENTS, undefined, f.offset(s))
   const rings: Ring[] = []
@@ -166,8 +169,7 @@ function buildSleeve(sign: 1 | -1): { sleeve: THREE.BufferGeometry; trim: THREE.
 
   // Dos franjas finas cerca del puño
   const stripe = (s0: number, w: number) => loft([ring(s0, 0.0011), ring(s0 + w, 0.0011)])
-  const trim = mergeGeometries([stripe(SLEEVE_LENGTH - 0.03, 0.006), stripe(SLEEVE_LENGTH - 0.017, 0.006)])
-  return { sleeve: loft(rings, { v: 'arc' }), trim }
+  return { sleeve: loft(rings, { v: 'arc' }), trims: [stripe(SLEEVE_LENGTH - 0.03, 0.006), stripe(SLEEVE_LENGTH - 0.017, 0.006)] }
 }
 
 export function buildShirt(): ShirtParts {
@@ -181,8 +183,10 @@ export function buildShirt(): ShirtParts {
     sleeveR: right.sleeve,
     collar,
     collarTrim: trim,
-    cuffTrimL: left.trim,
-    cuffTrimR: right.trim,
+    cuffTrimL: left.trims[0],
+    cuffTrimR: right.trims[0],
+    cuffTrim2L: left.trims[1],
+    cuffTrim2R: right.trims[1],
     hemY: HEM_Y,
   }
 }

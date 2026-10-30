@@ -51,3 +51,14 @@ export function readKitScene(root: THREE.Object3D): KitSceneData {
   })
   return data
 }
+
+/** Caja para encuadrar la cámara: solo la camiseta, o el conjunto completo. */
+export function viewBounds(data: KitSceneData, view: 'shirt' | 'full'): THREE.Box3 {
+  const box = new THREE.Box3()
+  for (const [name, geo] of Object.entries(data.geo)) {
+    if (view === 'shirt' && !name.startsWith('shirt-')) continue
+    geo.computeBoundingBox()
+    box.union(geo.boundingBox!)
+  }
+  return box
+}

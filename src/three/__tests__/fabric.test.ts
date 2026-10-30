@@ -12,7 +12,7 @@ describe('knitRepeat', () => {
 
   it('mantiene la celda cerca de su tamaño real en los dos sentidos', () => {
     const [u, v] = knitRepeat(1.15)
-    expect(u).toBe(Math.round(1.15 / (0.0022 * 16)))
-    expect(v).toBeCloseTo(1 / (0.0022 * 16))
+    expect(u).toBe(Math.round(1.15 / (0.003 * 16)))
+    expect(v).toBeCloseTo(1 / (0.003 * 16))
   })
 })

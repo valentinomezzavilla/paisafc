@@ -23,7 +23,7 @@ for (const kit of ['verde', 'crema']) {
       await page.goto(`${base}/preview-3d.html?kit=${kit}&view=${view}&angle=${angle}&ui=0`, { timeout: 90_000 })
       await page.waitForSelector('body[data-ready="1"]', { timeout: 60_000 })
       const file = new URL(`${kit}-${view}-${angle}.png`, out)
-      await page.screenshot({ path: fileURLToPath(file) })
+      await page.screenshot({ path: fileURLToPath(file), timeout: 180_000 })
       console.log('ok', file.pathname.split('/').pop())
     }
   }

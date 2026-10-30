@@ -67,35 +67,21 @@ export function buildBoot(side: 'L' | 'R'): BootParts {
     )
   }
 
-  // Suela: huella un poco más grande, extruida
-  const shape = new THREE.Shape(
-    Array.from({ length: SEGMENTS }, (_, j) => {
-      const p = footprint((j / SEGMENTS) * Math.PI * 2, 0.003)
-      return new THREE.Vector2(p.x, p.z)
-    }),
-  )
-  const sole = new THREE.ExtrudeGeometry(shape, { depth: SOLE_H, bevelEnabled: false, curveSegments: 1 })
+  // Suela: huella un poco más grande, extruida. La izquierda se arma con la huella espejada (no se
+  // escala en -1, que daría vuelta las caras).
+  const sign = side === 'L' ? -1 : 1
+  const outline = Array.from({ length: SEGMENTS }, (_, j) => {
+    const p = place(footprint((j / SEGMENTS) * Math.PI * 2, 0.003))
+    return new THREE.Vector2(sign * p.x, p.z)
+  })
+  const sole = new THREE.ExtrudeGeometry(new THREE.Shape(sign < 0 ? outline.reverse() : outline), {
+    depth: SOLE_H,
+    bevelEnabled: false,
+    curveSegments: 1,
+  })
   sole.rotateX(Math.PI / 2)
   sole.translate(0, SOLE_H, 0)
-  sole.rotateY(TOE_OUT)
-  sole.translate(BODY.legSpacing, 0, 0)
-  if (side === 'L') sole.scale(-1, 1, 1)
 
   const upper = loft(side === 'L' ? rings.map(mirrorX) : rings)
-  return { upper, sole: side === 'L' ? flipWinding(sole) : sole }
-}
-
-/** scale(-1) invierte las caras: se reordenan los índices para que vuelvan a mirar hacia afuera. */
-function flipWinding(geo: THREE.BufferGeometry): THREE.BufferGeometry {
-  const g = geo.index ? geo.toNonIndexed() : geo
-  const pos = g.getAttribute('position')
-  for (let i = 0; i < pos.count; i += 3) {
-    for (let k = 0; k < 3; k++) {
-      const a = pos.getComponent(i + 1, k)
-      pos.setComponent(i + 1, k, pos.getComponent(i + 2, k))
-      pos.setComponent(i + 2, k, a)
-    }
-  }
-  g.computeVertexNormals()
-  return g
+  return { upper, sole }
 }
