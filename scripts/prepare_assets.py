@@ -5,14 +5,12 @@ Prepara los assets del sitio a partir de public/assets/source/.
   python scripts/prepare_assets.py --esrgan   # ampliación con Real-ESRGAN (tools/esrgan)
 
 Salida en public/assets/:
-  kits/{titular,suplente}-{frente,espalda,short,medias}{.png,.webp,-640.webp}
   escudo/escudo{.png,.webp,-512.webp}
   favicon.ico, favicon-32.png, apple-touch-icon.png, og-image.jpg
 y la paleta medida en src/styles/palette.css (tokens de Tailwind).
 
-Los nombres titular/suplente reflejan la asignación inicial (verde = titular).
-Si se invierte en src/data/kits.ts, las imágenes siguen siendo correctas porque
-cada kit apunta a las fotos de su color.
+Las prendas recortadas del mockup quedan en .cache/assets/kits/: ya no se publican (el sitio
+muestra el modelo 3D), pero sirven para medir la paleta y armar og-image.jpg.
 """
 
 from __future__ import annotations
@@ -29,6 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "public/assets/source"
 OUT = ROOT / "public/assets"
 CACHE = ROOT / ".cache/assets"
+KITS = CACHE / "kits"  # prendas recortadas del mockup: insumo de la paleta y del og-image
 ESRGAN = ROOT / "tools/esrgan/realesrgan-ncnn-vulkan.exe"
 
 SCALE = 4
@@ -153,7 +152,7 @@ def kmeans_dominant(pixels: np.ndarray, k: int = 3, iters: int = 20) -> np.ndarr
 def build_kits(use_esrgan: bool) -> None:
     mockup = Image.open(SRC / "camiseta-mockup.jpg").convert("RGB")
     session = new_session("isnet-general-use")
-    folder = OUT / "kits"
+    folder = KITS
 
     for name, cfg in COLUMNS.items():
         l, t, r, b = cfg["box"]
@@ -221,7 +220,7 @@ def build_og(crest: Image.Image, forest: tuple[int, int, int]) -> None:
     c.thumbnail((440, 540), Image.LANCZOS)
     og.alpha_composite(c, (330 - c.width // 2, (H - c.height) // 2))
 
-    kits = OUT / "kits"
+    kits = KITS
     for i, name in enumerate(["suplente-frente", "titular-frente"]):
         shirt = Image.open(kits / f"{name}.png").convert("RGBA")
         shirt.thumbnail((330, 420), Image.LANCZOS)
@@ -253,7 +252,7 @@ def build_palette() -> dict[str, str]:
     hexa = lambda c: "#{:02x}{:02x}{:02x}".format(*np.round(c).astype(int))
     palette = {}
     for token, (piece, q) in FABRIC_SAMPLES.items():
-        arr = np.asarray(Image.open(OUT / "kits" / f"{piece}.png"), dtype=np.float32)
+        arr = np.asarray(Image.open(KITS / f"{piece}.png"), dtype=np.float32)
         px = arr[arr[..., 3] > 250][:, :3]
         lum = px.mean(1)
         # Solo tela: afuera logos, números y ribetes.

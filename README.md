@@ -4,7 +4,8 @@ Sitio de una sola página para presentar las camisetas de Paisa FC: la **titular
 **suplente crema**, el escudo y los sponsors.
 
 Stack: Vite + React + TypeScript + Tailwind CSS v4, GSAP (ScrollTrigger y SplitText) y Lenis para el
-scroll suave. El HTML se prerenderiza en el build, así que la primera pantalla aparece sin esperar al JS.
+scroll suave. Las camisetas son un modelo 3D (three + react-three-fiber) que se gira arrastrando. El HTML
+se prerenderiza en el build, así que la primera pantalla aparece sin esperar al JS ni a three.
 
 ## Desarrollo
 
@@ -50,16 +51,18 @@ export const ROLES: Record<KitId, KitRole> = { verde: 'titular', crema: 'suplent
 
 Para invertirlos: `{ verde: 'suplente', crema: 'titular' }`. Toda la interfaz se adapta sola: las
 etiquetas ("Titular · Verde bosque"), el orden del selector, el kit con el que abre el sitio (siempre la
-titular) y los textos alternativos de las imágenes.
+titular) y los textos alternativos de los pósters.
 
 ### Agregar un tercer kit
 
 1. Sumá el id a `KitId` (por ejemplo `'negro'`) y su rol a `ROLES` (`negro: 'alternativa'`).
-2. Agregá su objeto a `KIT_LIST`: nombre del color, paleta (`theme`), las cuatro fotos y los hotspots.
-3. Las fotos van en `public/assets/kits/` con versión grande (`nombre.webp`) y chica (`nombre-640.webp`).
+2. Agregá su objeto a `KIT_LIST`: nombre del color, paleta (`theme`) y los detalles (`hotspots`).
+3. Sus colores de tela, ribetes y diseños van en `src/three/kitColors.ts` y `src/three/design/`.
+4. Sacá los pósters con `node scripts/snap-posters.mjs` (ver "Modelo 3D").
 
-Los hotspots se ubican con `x` / `y` en % sobre la foto de la prenda. El cierre "Las dos juntas"
-muestra los dos primeros kits (titular y suplente).
+Cada detalle apunta a un ancla del modelo (`anchor`, definida en `src/three/anchors.ts`): el punto se
+pega solo a la prenda, de cualquier lado que quede. El cierre "Las dos juntas" muestra los dos primeros
+kits (titular y suplente).
 
 ### Textos
 
@@ -70,7 +73,8 @@ muestra los dos primeros kits (titular y suplente).
 Los originales están en `public/assets/source/` (`escudo.jpeg` y `camiseta-mockup.jpg`). El script
 `scripts/prepare_assets.py` hace todo lo siguiente:
 
-- recorta las 8 prendas (`titular|suplente-frente|espalda|short|medias`) sin fondo, en PNG y WebP;
+- recorta las 8 prendas del mockup sin fondo (quedan en `.cache/assets/kits/`: ya no se publican, sirven
+  para medir la paleta y armar la imagen Open Graph);
 - genera el escudo transparente, el favicon, el apple-touch-icon y la imagen Open Graph;
 - mide la paleta sobre las imágenes y escribe `src/styles/palette.css`;
 - extrae la letra de Tom's Burger y genera la textura de grano.
@@ -90,3 +94,20 @@ foto. Con un mockup en alta resolución, reemplazá el archivo en `source/` y vo
 
 `node scripts/shoot.mjs <nombre> [scrollY...]` saca capturas en mobile y desktop (en `.cache/shots/`)
 para revisar cambios visuales.
+
+## Modelo 3D
+
+El modelo se arma por código (`src/three/`) y se hornea a un `.glb` con las piezas, los calcos
+(logos proyectados sobre la tela) y las anclas de los detalles. Solo hace falta volver a hornear si
+cambia la geometría o la posición de un calco:
+
+```bash
+npm run bake:kit                    # public/assets/kits/3d/kit.glb (meshopt, ~300 KB)
+npm run dev                         # y en otra terminal:
+node scripts/snap-posters.mjs       # pósters webp (public/assets/kits/3d/posters/)
+node scripts/snap-preview.mjs       # capturas de la página de revisión (preview-3d.html)
+```
+
+`three` y el `.glb` van en chunks que se cargan cuando el navegador queda libre y la sección está a
+menos de una pantalla. Hasta entonces (y sin WebGL, o si falla la carga) se ve el póster. Los pósters
+se versionan: hay que regenerarlos si cambia el aspecto del modelo.

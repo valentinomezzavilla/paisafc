@@ -40,19 +40,10 @@ export interface KitTheme {
   topo: { tone: TopoTone; opacity: number } // curvas de nivel del fondo
 }
 
-/** Ruta base de una prenda; el componente arma `${src}.webp` y `${src}-640.webp`. */
-export interface KitPiece {
-  src: string
-  width: number
-  height: number
-  alt: string
-}
-
 export interface KitData {
   id: KitId
   colorName: string
   theme: KitTheme
-  pieces: { front: KitPiece; back: KitPiece; shorts: KitPiece; socks: KitPiece }
   /** En el orden en que se numeran: frente, espalda y short. */
   hotspots: Hotspot[]
 }
@@ -64,15 +55,6 @@ export interface Kit extends KitData {
   fullName: string
 }
 
-const piece = (file: string, width: number, height: number, alt: string): KitPiece => ({
-  src: `assets/kits/${file}`,
-  width,
-  height,
-  alt,
-})
-
-// Los archivos se llaman por la asignación inicial (verde = titular). Cada kit apunta a las
-// fotos de SU color, así que invertir ROLES no rompe nada.
 const KIT_LIST: KitData[] = [
   {
     id: 'verde',
@@ -85,12 +67,6 @@ const KIT_LIST: KitData[] = [
       accent: 'var(--color-gold)',
       onAccent: 'var(--color-forest-deep)',
       topo: { tone: 'gold', opacity: 0.16 },
-    },
-    pieces: {
-      front: piece('titular-frente', 1038, 1466, 'camiseta verde bosque de frente'),
-      back: piece('titular-espalda', 1137, 1458, 'camiseta verde bosque de espalda, con MEZZAVILLA 11 y Tom’s Burger'),
-      shorts: piece('titular-short', 858, 718, 'short verde con franja lateral dorada'),
-      socks: piece('titular-medias', 1001, 983, 'medias verdes con botines verdes'),
     },
     hotspots: [
       { id: 'cuello', title: 'Cuello polo', text: 'Solapa en V con ribete dorado.' },
@@ -120,12 +96,6 @@ const KIT_LIST: KitData[] = [
       accent: 'var(--color-forest)',
       onAccent: 'var(--color-cream)',
       topo: { tone: 'forest', opacity: 0.14 },
-    },
-    pieces: {
-      front: piece('suplente-frente', 1110, 1458, 'camiseta crema de frente'),
-      back: piece('suplente-espalda', 1137, 1456, 'camiseta crema de espalda, con MEZZAVILLA 11 y Tom’s Burger'),
-      shorts: piece('suplente-short', 862, 726, 'short verde con franja lateral crema y dorada'),
-      socks: piece('suplente-medias', 990, 979, 'medias crema con botines blancos'),
     },
     hotspots: [
       { id: 'cuello', title: 'Cuello polo', text: 'Solapa en V con ribete verde y dorado.' },

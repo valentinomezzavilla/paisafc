@@ -17,7 +17,8 @@ export function KitsTogether() {
   const progress = useRef(1)
   const [failed, setFailed] = useState(false)
   const [ready, setReady] = useState(false)
-  const gate = useViewerGate(root)
+  // Más corto que el margen por defecto: así no arranca a la vez que el visor de #camisetas.
+  const gate = useViewerGate(root, '30% 0px')
   const mount = gate.ready && !failed
   const onReady = useCallback(() => setReady(true), [])
   const onError = useCallback(() => setFailed(true), [])
