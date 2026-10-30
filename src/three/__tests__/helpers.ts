@@ -22,3 +22,11 @@ export function halfWidthAt(geo: THREE.BufferGeometry, y: number, tol = 0.01): n
   for (let i = 0; i < pos.count; i++) if (Math.abs(pos.getY(i) - y) < tol) w = Math.max(w, Math.abs(pos.getX(i)))
   return w
 }
+
+/** Mayor |z - cz| de los vértices que están a ±tol de la altura y. */
+export function halfDepthAt(geo: THREE.BufferGeometry, y: number, tol = 0.01, cz = 0): number {
+  const pos = geo.getAttribute('position')
+  let d = 0
+  for (let i = 0; i < pos.count; i++) if (Math.abs(pos.getY(i) - y) < tol) d = Math.max(d, Math.abs(pos.getZ(i) - cz))
+  return d
+}
