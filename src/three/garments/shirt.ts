@@ -43,8 +43,8 @@ const TORSO_PROFILE: [number, number, number][] = [
 const TORSO_N = 2.5
 
 // Manga: sale del hombro a 32° de la vertical.
-const SLEEVE_ANGLE = THREE.MathUtils.degToRad(32)
-const SLEEVE_LENGTH = 0.235
+export const SLEEVE_ANGLE = THREE.MathUtils.degToRad(32)
+export const SLEEVE_LENGTH = 0.235
 const SLEEVE_ROOT_R = 0.08
 const SLEEVE_CUFF_R = 0.064
 const SLEEVE_EMBED = 0.03
@@ -122,7 +122,7 @@ function torsoRings(): Ring[] {
   return rings
 }
 
-interface SleeveFrame {
+export interface SleeveFrame {
   axis: THREE.Vector3
   /** Centro del anillo a distancia s del hombro (s < 0: metido en el torso). */
   center: (s: number) => THREE.Vector3
@@ -130,7 +130,7 @@ interface SleeveFrame {
   offset: (s: number) => (t: number) => number
 }
 
-function sleeveFrame(sign: 1 | -1): SleeveFrame {
+export function sleeveFrame(sign: 1 | -1): SleeveFrame {
   const axis = new THREE.Vector3(sign * Math.sin(SLEEVE_ANGLE), -Math.cos(SLEEVE_ANGLE), 0)
   // Perpendicular hacia arriba y afuera: de ahí sale la costura del hombro
   const up = new THREE.Vector3(sign * Math.cos(SLEEVE_ANGLE), Math.sin(SLEEVE_ANGLE), 0)

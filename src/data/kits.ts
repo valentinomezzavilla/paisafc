@@ -7,6 +7,7 @@
  */
 
 import type { TopoTone } from '../components/ui/Topo'
+import type { AnchorId } from '../three/anchors'
 
 export type KitId = 'verde' | 'crema'
 export type KitRole = 'titular' | 'suplente' | 'alternativa'
@@ -21,9 +22,12 @@ export const ROLE_LABEL: Record<KitRole, string> = {
 }
 const ROLE_ORDER: KitRole[] = ['titular', 'suplente', 'alternativa']
 
-/** Coordenadas en % sobre la imagen de la prenda (0–100). */
+/**
+ * Un detalle tocable. `id` es también su ancla sobre la prenda 3D (ver `src/three/anchors.ts`).
+ * x/y: coordenadas en % sobre la foto (vista plana actual).
+ */
 export interface Hotspot {
-  id: string
+  id: AnchorId
   x: number
   y: number
   title: string
