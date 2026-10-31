@@ -36,12 +36,34 @@ export const kitsSection = {
   dragHint: 'Arrastrá para girarla',
   hotspotHint: 'Tocá los puntos para ver cada detalle',
   viewerLabel: 'Camiseta en 3D. Arrastrá o usá las flechas para girarla.',
+  turntableLabel: 'Arrastrá o usá las flechas para girarla.',
   detailsTitle: 'Detalles',
   closeDetail: 'Cerrar detalle',
   together: {
     eyebrow: 'Las dos juntas',
     title: 'Una para cada domingo',
     text: 'Titular y suplente, lado a lado.',
+  },
+}
+
+/** Cada equipación entera (camiseta, short, medias y botines), tal como está en el mockup. */
+export const fullKitsSection = {
+  eyebrow: 'Equipación completa',
+  front: 'Frente',
+  back: 'Espalda',
+  pieces: {
+    verde: [
+      { label: 'Camiseta', text: 'Verde bosque con curvas de nivel y detalles dorados' },
+      { label: 'Short', text: 'Verde, con franja dorada y el escudo' },
+      { label: 'Medias', text: 'Verdes' },
+      { label: 'Botines', text: 'Verdes' },
+    ],
+    crema: [
+      { label: 'Camiseta', text: 'Crema con rombos tono sobre tono y detalles verdes' },
+      { label: 'Short', text: 'Verde, con franja crema y el escudo' },
+      { label: 'Medias', text: 'Crema' },
+      { label: 'Botines', text: 'Blancos con suela verde' },
+    ],
   },
 }
 
@@ -88,4 +110,11 @@ export const contact = {
     { label: 'Email', href: '#' },
   ],
   footer: 'Paisa FC',
+  // La licencia CC BY 4.0 del modelo de la camiseta pide crédito al autor y avisar que se modificó.
+  modelCredit: {
+    text: 'Prenda 3D basada en “Maillot Olympique De Marseille” de marie.cruciani, con diseño propio',
+    href: 'https://sketchfab.com/3d-models/563b2a7f3ee840f39988dddf6f942610',
+    license: 'CC BY 4.0',
+    licenseHref: 'https://creativecommons.org/licenses/by/4.0/',
+  },
 }

@@ -13,8 +13,10 @@ export interface KitColors {
   /** Estampados (VEZZA, nombre, número, sponsor) y su contorno. */
   print: string
   printOutline: string
-  /** Fondo del parche de la manga. */
-  patchBg: string
+  /** Parche de la manga: aro, letra y rayo (adentro se ve la tela). */
+  patchRing: string
+  patchInk: string
+  patchBolt: string
   /** Curvas de nivel de la tela y cuánto se marcan (0–1). */
   topo: string
   topoStrength: number
@@ -33,13 +35,15 @@ export const KIT_COLORS: Record<KitId, KitColors> = {
     sole: '#12321c',
     print: '#d6c48f',
     printOutline: '#0e2716',
-    patchBg: '#1d4a2a',
+    patchRing: '#d6c48f',
+    patchInk: '#e0d09b',
+    patchBolt: '#e3ad2c',
     topo: '#10301b',
     topoStrength: 0.85,
   },
   crema: {
     // Un punto más cálido que --color-cream: el tone mapping lo agrisa.
-    fabric: '#ebdfc2',
+    fabric: '#e2d9c0',
     trim: '#22432e',
     trim2: '#cdbb8b',
     shorts: '#1d4a2a',
@@ -49,7 +53,9 @@ export const KIT_COLORS: Record<KitId, KitColors> = {
     sole: '#22432e',
     print: '#1f4a2c',
     printOutline: '#cdbb8b',
-    patchBg: '#f1e8d2',
+    patchRing: '#d4b04a',
+    patchInk: '#17231b',
+    patchBolt: '#e3ad2c',
     topo: '#d3c7a8',
     topoStrength: 0.5,
   },

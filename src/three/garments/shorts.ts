@@ -26,14 +26,16 @@ const smooth = THREE.MathUtils.smoothstep
 
 // Cadera: [altura, medio ancho, media profundidad] del contorno completo, centrado en x = 0.
 const HIP_PROFILE: [number, number, number][] = [
-  [TOP_Y, 0.174, 0.118],
-  [BODY.hip, 0.181, 0.124],
-  [BODY.crotch, 0.19, 0.13],
+  [TOP_Y, 0.168, 0.114],
+  [BODY.hip, 0.175, 0.12],
+  [BODY.crotch, 0.186, 0.128],
 ]
 // Pierna: [altura, centro x, medio ancho, media profundidad]
+// Se abren hacia el ruedo como un short de fútbol holgado
 const LEG_PROFILE: [number, number, number, number][] = [
-  [BODY.crotch - 0.07, BODY.legSpacing - 0.004, 0.1, 0.104],
-  [HEM_Y, BODY.legSpacing + 0.004, 0.101, 0.104],
+  [BODY.crotch - 0.07, BODY.legSpacing - 0.004, 0.102, 0.106],
+  [BODY.knee + 0.2, BODY.legSpacing, 0.11, 0.112],
+  [HEM_Y, BODY.legSpacing + 0.007, 0.119, 0.117],
 ]
 
 const lerpProfile = <T extends number[]>(rows: T[], y: number): T => {
@@ -41,10 +43,22 @@ const lerpProfile = <T extends number[]>(rows: T[], y: number): T => {
   for (let i = 1; i < rows.length; i++) {
     if (y >= rows[i][0]) {
       const f = (rows[i - 1][0] - y) / (rows[i - 1][0] - rows[i][0])
-      return rows[i].map((v, k) => THREE.MathUtils.lerp(rows[i - 1][k], v, smooth(f, 0, 1))) as T
+      // Lineal: con un suavizado por tramo el contorno frenaba en cada punto y quedaban escalones
+      return rows[i].map((v, k) => THREE.MathUtils.lerp(rows[i - 1][k], v, f)) as T
     }
   }
   return rows[rows.length - 1]
+}
+
+/**
+ * Caída de la tela del short: pliegues verticales que se abren hacia el ruedo y arrugas horizontales de
+ * la tela que se junta en la cadera.
+ */
+function shortFolds(t: number, y: number): number {
+  const toHem = 1 - smooth(y, HEM_Y, BODY.crotch - 0.02)
+  const drape = 0.0036 * Math.sin(4 * t + 1.7) + 0.0027 * Math.sin(7 * t + 0.4 + 1.5 * Math.sin(y * 9)) + 0.0017 * Math.sin(11 * t + 2.2 + 3 * y)
+  const gather = 0.0022 * smooth(y, BODY.crotch - 0.04, BODY.hip) * (1 - smooth(y, BODY.hip, TOP_Y)) * Math.sin(46 * y + 3 * Math.cos(2 * t))
+  return drape * toHem + gather
 }
 
 /** Ángulo (0 = frente, avanza hacia +x) del punto j de la pierna derecha. */
@@ -66,8 +80,7 @@ function legRing(y: number): Ring {
         : new THREE.Vector3(0, y, THREE.MathUtils.lerp(-hz, hz, (j - OUTER) / INNER))
     const o = new THREE.Vector3(cx + lx * Math.sin(t), y, lz * Math.cos(t))
     const p = d.lerp(o, b)
-    // Caída de la tela: pliegues verticales suaves que se abren hacia el ruedo
-    const fold = 0.0028 * (1 - smooth(y, HEM_Y, BODY.crotch)) * Math.sin(5 * t + 1.7) * (j <= OUTER ? 1 : 0.4)
+    const fold = shortFolds(t, y) * (j <= OUTER ? 1 : 0.4)
     const out = new THREE.Vector3(p.x - cx * b, 0, p.z).normalize()
     return p.addScaledVector(out, fold)
   })
@@ -75,7 +88,7 @@ function legRing(y: number): Ring {
 
 function legRings(): Ring[] {
   const rings: Ring[] = []
-  const steps = 36
+  const steps = 38
   for (let i = 0; i <= steps; i++) rings.push(legRing(HEM_Y + ((TOP_Y - HEM_Y) * i) / steps))
   // Dobladillo del ruedo hacia adentro
   const hem = rings[0]

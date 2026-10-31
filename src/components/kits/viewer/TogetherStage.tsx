@@ -7,7 +7,7 @@ import { useMediaQuery } from '../../../hooks/useMediaQuery'
 import { MOTION } from '../../../lib/gsap'
 import { KitModel } from '../../../three/KitModel'
 import { viewBounds, type KitSceneData } from '../../../three/kitScene'
-import { StudioLights } from '../../../three/StudioLights'
+import { EXPOSURE, StudioLights } from '../../../three/StudioLights'
 import { useKitAssets, type KitTextures } from '../../../three/useKitScene'
 import { FOV } from './KitStage'
 
@@ -119,7 +119,7 @@ export default function TogetherStage({ progress, onReady, onError }: TogetherSt
           shadows
           dpr={[1, 2]}
           camera={{ fov: FOV, near: 0.05, far: 20 }}
-          gl={{ antialias: true, alpha: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: 1.05 }}
+          gl={{ antialias: true, alpha: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: EXPOSURE }}
         >
           <Pair scene={assets.scene} textures={assets.textures} progress={progress} reduced={reduced} />
         </Canvas>

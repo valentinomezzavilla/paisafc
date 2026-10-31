@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect width="256" height="256" fill="#e5decd" />
+  <g fill="none" stroke-linejoin="miter">
+    <!-- Rombo central y de esquinas con escalones concéntricos tipo tejido jacquard -->
+    <g stroke="#d3c9b2" stroke-width="5">
+      <polygon points="128,6 250,128 128,250 6,128" />
+      <polygon points="128,32 224,128 128,224 32,128" />
+      <polygon points="128,58 198,128 128,198 58,128" />
+      <polygon points="128,84 172,128 128,172 84,128" />
+      <polygon points="128,108 148,128 128,148 108,128" />
+    </g>
+    <g stroke="#efe9da" stroke-width="3" transform="translate(-2,-2)">
+      <polygon points="128,6 250,128 128,250 6,128" />
+      <polygon points="128,32 224,128 128,224 32,128" />
+      <polygon points="128,58 198,128 128,198 58,128" />
+      <polygon points="128,84 172,128 128,172 84,128" />
+    </g>
+  </g>
+</svg>

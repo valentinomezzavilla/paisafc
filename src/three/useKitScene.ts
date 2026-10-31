@@ -5,7 +5,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js'
 import type { KitId } from '../data/kits'
 import { asset } from '../lib/asset'
 import type { DecalId } from './anchors'
-import { decalTextures } from './design/decalTextures'
+import { decalTextures, type DecalMaps } from './design/decalTextures'
 import { topoTexture } from './design/topoTexture'
 import { readKitScene, type KitSceneData } from './kitScene'
 
@@ -22,7 +22,7 @@ export function loadKitScene(): Promise<KitSceneData> {
 
 export interface KitTextures {
   topo: THREE.CanvasTexture
-  decals: Record<DecalId, THREE.CanvasTexture>
+  decals: Record<DecalId, DecalMaps>
 }
 
 const texturePromises = new Map<KitId, Promise<KitTextures>>()

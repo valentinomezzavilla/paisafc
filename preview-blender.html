@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Paisa FC · Muestra Blender (Claude)</title>
+    <!-- Solo para desarrollo: muestra de los renders de scripts/blender/render_kit.py. No entra al build. -->
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; background: #0b1f12; color: #e5decd; }
+      h1 { margin: 0; padding: 20px 24px 8px; font-size: 18px; font-weight: 600; }
+      p { margin: 0; padding: 0 24px 16px; opacity: 0.7; font-size: 14px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+      figure { margin: 0; aspect-ratio: 9 / 10; display: grid; place-items: center; }
+      figure img { width: 100%; height: 100%; object-fit: contain; }
+      .verde { background: radial-gradient(90% 70% at 50% 45%, #12321c 40%, #0a2111); }
+      .crema { background: radial-gradient(90% 70% at 50% 45%, #e5decd 40%, #dbd4c3); }
+      .mock { background: #fff; padding: 16px; }
+      .mock img { width: 100%; max-width: 1100px; display: block; margin: 0 auto; }
+    </style>
+  </head>
+  <body>
+    <h1>Muestra en Blender: prenda de CLO3D con los diseños de Paisa FC, render Cycles</h1>
+    <p>Sobre el fondo de cada kit en el sitio. Abajo, el mockup.</p>
+    <div class="grid">
+      <figure class="verde"><img src="/.cache/blender/jersey-out/verde-000.png" alt="Verde, frente" /></figure>
+      <figure class="verde"><img src="/.cache/blender/jersey-out/verde-001.png" alt="Verde, espalda" /></figure>
+      <figure class="crema"><img src="/.cache/blender/jersey-out/crema-000.png" alt="Crema, frente" /></figure>
+      <figure class="crema"><img src="/.cache/blender/jersey-out/crema-001.png" alt="Crema, espalda" /></figure>
+    </div>
+    <div class="mock"><img src="/public/assets/source/camiseta-mockup.jpg" alt="Mockup" /></div>
+  </body>
+</html>

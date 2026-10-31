@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { BODY } from '../body'
-import { buildBoot } from '../garments/boots'
+import { buildBoot, STUD_H } from '../garments/boots'
 import { buildShorts } from '../garments/shorts'
 import { buildSock } from '../garments/socks'
 import { hasNaN, outwardNormalRatio } from '../loft'
@@ -63,7 +63,9 @@ describe('botines', () => {
     for (const [side, b] of Object.entries(boots)) {
       expect(hasNaN(b.upper)).toBe(false)
       expect(hasNaN(b.sole)).toBe(false)
-      expect(bbox(b.sole).min.y).toBeCloseTo(0, 4)
+      // Los tapones apoyan en el piso: la suela queda a su altura
+      expect(bbox(b.studs).min.y).toBeCloseTo(0, 4)
+      expect(bbox(b.sole).min.y).toBeCloseTo(STUD_H, 4)
       const sign = side === 'L' ? -1 : 1
       const center = (p: THREE.Vector3) => new THREE.Vector3(sign * BODY.legSpacing, Math.max(p.y, 0.04), 0.03)
       expect(outwardNormalRatio(b.upper, center)).toBeGreaterThan(0.9)
@@ -77,7 +79,7 @@ describe('botines', () => {
     expect(l.max.z).toBeCloseTo(r.max.z, 4)
     for (const [side, b] of Object.entries(boots)) {
       const sign = side === 'L' ? -1 : 1
-      const center = (p: THREE.Vector3) => new THREE.Vector3(sign * BODY.legSpacing, 0.0065, 0.04).lerp(p, 0.001)
+      const center = (p: THREE.Vector3) => new THREE.Vector3(sign * BODY.legSpacing, STUD_H + 0.0065, 0.04).lerp(p, 0.001)
       b.sole.computeVertexNormals()
       expect(outwardNormalRatio(b.sole, center), side).toBeGreaterThan(0.6)
     }

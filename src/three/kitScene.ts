@@ -11,6 +11,8 @@ export interface KitSceneData {
   geo: Record<string, THREE.BufferGeometry>
   decals: Record<DecalId, THREE.BufferGeometry>
   anchors: Record<AnchorId, Anchor>
+  /** Las piezas traen la oclusión ambiental horneada en el color de los vértices. */
+  ao: boolean
 }
 
 /**
@@ -20,7 +22,7 @@ export interface KitSceneData {
 function bakeTransform(mesh: THREE.Mesh): THREE.BufferGeometry {
   const src = mesh.geometry
   const geo = new THREE.BufferGeometry()
-  for (const name of ['position', 'normal', 'uv'] as const) {
+  for (const name of ['position', 'normal', 'uv', 'color'] as const) {
     const attr = src.getAttribute(name)
     if (!attr) continue
     const out = new Float32Array(attr.count * attr.itemSize)
@@ -35,7 +37,7 @@ function bakeTransform(mesh: THREE.Mesh): THREE.BufferGeometry {
 /** Lee la escena de kit.glb (o la de buildKitScene) y separa piezas, calcos y anclas. */
 export function readKitScene(root: THREE.Object3D): KitSceneData {
   root.updateMatrixWorld(true)
-  const data: KitSceneData = { geo: {}, decals: {} as KitSceneData['decals'], anchors: {} as KitSceneData['anchors'] }
+  const data: KitSceneData = { geo: {}, decals: {} as KitSceneData['decals'], anchors: {} as KitSceneData['anchors'], ao: false }
   root.traverse((obj) => {
     if (obj.name.startsWith('anchor-')) {
       const n = obj.userData.normal as [number, number, number]
@@ -46,7 +48,10 @@ export function readKitScene(root: THREE.Object3D): KitSceneData {
     } else if (obj instanceof THREE.Mesh) {
       const geo = bakeTransform(obj)
       if (obj.name.startsWith('decal-')) data.decals[obj.name.slice(6) as DecalId] = geo
-      else data.geo[obj.name] = geo
+      else {
+        data.geo[obj.name] = geo
+        if (geo.hasAttribute('color')) data.ao = true
+      }
     }
   })
   return data

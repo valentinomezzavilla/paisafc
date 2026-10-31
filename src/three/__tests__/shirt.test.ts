@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BODY } from '../body'
-import { buildShirt, SLEEVE_SEGMENTS } from '../garments/shirt'
+import { buildShirt, HEM_Y, SLEEVE_SEGMENTS } from '../garments/shirt'
 import { hasNaN, outwardNormalRatio } from '../loft'
 import { bbox, firstRingCenter, halfWidthAt, sideExtentAt, yAxis } from './helpers'
 
@@ -21,7 +21,9 @@ describe('buildShirt', () => {
   it('el torso va del ruedo al cuello', () => {
     const box = bbox(shirt.body)
     expect(box.min.y).toBeCloseTo(shirt.hemY, 3)
-    expect(shirt.hemY).toBeCloseTo(BODY.crotch + 0.07, 5)
+    expect(shirt.hemY).toBeCloseTo(HEM_Y, 5)
+    // Larga, como en el mockup: cubre la cintura del short
+    expect(shirt.hemY).toBeLessThan(BODY.crotch + 0.06)
     expect(box.max.y).toBeGreaterThanOrEqual(BODY.neckBase - 0.02)
   })
 
@@ -44,9 +46,9 @@ describe('buildShirt', () => {
     expect(bbox(shirt.collar).min.y).toBeGreaterThanOrEqual(BODY.chest + 0.08)
   })
 
-  it('el torso es simétrico: los pliegues no cambian de un lado al otro', () => {
+  it('los dos lados tienen el mismo ancho: las arrugas son distintas pero no corren el costado más de 2 mm', () => {
     for (const y of [0.95, 1.1, 1.2, 1.26, 1.32]) {
-      expect(sideExtentAt(shirt.body, y, 1), `y = ${y}`).toBeCloseTo(sideExtentAt(shirt.body, y, -1), 3)
+      expect(Math.abs(sideExtentAt(shirt.body, y, 1) - sideExtentAt(shirt.body, y, -1)), `y = ${y}`).toBeLessThan(0.002)
     }
   })
 

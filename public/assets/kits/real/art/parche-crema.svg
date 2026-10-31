@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  <!-- Aro circular -->
+  <circle cx="120" cy="120" r="108" fill="none" stroke="#d4b04a" stroke-width="6.5" />
+  <!-- Letra R en itálica pesada con corte diagonal -->
+  <g fill="#141d17" fill-rule="evenodd" transform="translate(8,0) skewX(-11)">
+    <path d="M58,58 L128,58 C154,58 168,71 168,93 C168,111 157,123 139,127 L168,180 L134,180 L109,131 L89,131 L89,180 L58,180 Z M89,83 L89,108 L121,108 C131,108 137,103 137,95 C137,87 131,83 121,83 Z" />
+  </g>
+  <!-- Rayo cruzado -->
+  <polygon points="164,52 118,128 145,128 122,196 186,108 156,108 178,52" fill="#e3ad2c" />
+</svg>

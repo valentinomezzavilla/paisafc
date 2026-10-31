@@ -7,6 +7,7 @@ import { MOTION } from '../../../lib/gsap'
 import type { AnchorId } from '../../../three/anchors'
 import type { KitView } from '../../../three/KitModel'
 import { useKitAssets } from '../../../three/useKitScene'
+import { EXPOSURE } from '../../../three/StudioLights'
 import { HotspotPin } from './HotspotPin'
 import { FOV, KitStage, MAX_TILT, type SpinControl } from './KitStage'
 
@@ -151,7 +152,7 @@ export default function KitViewer({ kit, view, hotspots, activeHotspot, onHotspo
           shadows
           dpr={[1, 2]}
           camera={{ fov: FOV, near: 0.05, far: 20 }}
-          gl={{ antialias: true, alpha: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: 1.05 }}
+          gl={{ antialias: true, alpha: true, toneMapping: THREE.NeutralToneMapping, toneMappingExposure: EXPOSURE }}
           aria-hidden
         >
           <KitStage

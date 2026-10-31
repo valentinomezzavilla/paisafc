@@ -106,6 +106,16 @@ export function Sponsors() {
             Volver arriba ↑
           </a>
         </div>
+        <p className="mx-auto max-w-6xl px-4 pb-5 text-xs text-cream/40 sm:px-8">
+          <a href={contact.modelCredit.href} target="_blank" rel="noopener noreferrer" className="hover:text-cream/70">
+            {contact.modelCredit.text}
+          </a>{' '}
+          (
+          <a href={contact.modelCredit.licenseHref} target="_blank" rel="noopener noreferrer" className="hover:text-cream/70">
+            {contact.modelCredit.license}
+          </a>
+          ).
+        </p>
       </footer>
     </section>
   )

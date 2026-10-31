@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 135">
+  <defs>
+    <path id="arch" d="M 24,116 Q 400,100 776,116" />
+  </defs>
+  <text fill="#1d452a" font-family="'Big Shoulders Display Variable', 'Impact', 'Arial Narrow', sans-serif" font-weight="800" font-size="112" letter-spacing="4" text-anchor="middle">
+    <textPath href="#arch" startOffset="50%">MEZZAVILLA</textPath>
+  </text>
+</svg>
